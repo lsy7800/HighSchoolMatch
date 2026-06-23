@@ -1,3 +1,53 @@
-# HighSchoolMatch
+# HighSchoolMatch · 中考志愿填报辅助系统
 
-一个中考志愿填报辅助项目
+用学生中考分数辅助填报中考志愿。核心思路：**位次法**——分数逐年不可比，位次相对稳定。
+学生分数经「一分档」换算成位次，再与各校历史录取位次比对，按 **冲 / 稳 / 保** 给出建议。
+
+## 数据口径
+
+- 学生范围：暂只支持**市内六区**考生（后续可扩展）。
+- 一分档同时含「全市累计」「市内六区累计」两列，按学校招生口径配对：
+  | 学校招生范围 | 用学生的哪个位次 | 比对学校的哪列 |
+  |---|---|---|
+  | 面向市内六区 | 市内六区位次 | 市区录取位次 |
+  | 面向全市 | 全市位次 | 全市录取位次 |
+  | 面向郊区 | 全市位次 | 全市录取位次 |
+- 数据按 `year` 版本化，2026 年数据可与 2025 并存，后台直接替换。
+
+## 技术栈
+
+- 后端：FastAPI + SQLAlchemy 2.0 + SQLite
+- 前端：Vue3 + Vite（学生端 + `/admin` 管理后台）
+- 数据导入：openpyxl 解析 xlsx
+
+## 目录结构
+
+```
+backend/         FastAPI 后端
+  app/           models / database / importers / routers / matching / auth
+  scripts/       seed_2025.py  一次性导入 2025 数据
+  data/          app.db (gitignored, 由 seed 生成)
+frontend/        Vue3 前端 (待建)
+data_source/     原始 PDF / xlsx 数据（参照）
+```
+
+## 本地启动（后端）
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r backend/requirements.txt
+cd backend
+python -m scripts.seed_2025      # 建库 + 导入 2025 数据 + 校验
+```
+
+校验通过应输出：一分档 281 档；学校 city6=81 / whole=48 / suburb=149，共 278 校。
+
+## 进度
+
+- [x] M1 项目骨架 + 数据库模型 + 2025 数据导入与校验
+- [ ] M2 匹配引擎（位次换算 / 等位分 / 冲稳保）+ 公开 API
+- [ ] M3 学生前端
+- [ ] M4 管理后台（登录 + xlsx 导入 + CRUD + 阈值配置）
+- [ ] M5 打磨（趋势图 / 文案 / 免责声明）
+
+> 免责声明：本系统结果仅供参考，志愿填报请以官方招生政策与正式发布数据为准。
