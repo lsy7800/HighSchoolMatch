@@ -33,11 +33,25 @@ data_source/     原始 PDF / xlsx 数据（参照）
 
 ## 本地启动（后端）
 
+推荐用 [uv](https://docs.astral.sh/uv/) 管理（已提供 `backend/pyproject.toml` + `uv.lock`）：
+
+```bash
+cd backend
+uv sync                          # 按 uv.lock 创建 .venv 并安装依赖(含开发依赖)
+uv run python -m scripts.seed_2025   # 建库 + 导入 2025 数据 + 校验
+uv run uvicorn app.main:app --reload # 启动后端 (http://127.0.0.1:8000)
+uv run pytest                    # 运行测试
+```
+
+生产环境跳过开发依赖：`uv sync --no-dev`。
+
+或用传统 pip（备选）：
+
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r backend/requirements.txt
 cd backend
-python -m scripts.seed_2025      # 建库 + 导入 2025 数据 + 校验
+python -m scripts.seed_2025
 ```
 
 校验通过应输出：一分档 281 档；学校 city6=81 / whole=48 / suburb=149，共 278 校。
