@@ -1,0 +1,166 @@
+/* ---- 设计变量 ---- */
+:root {
+  --c-reach: #e8743b;   /* 冲 橙 */
+  --c-stable: #2e9e5b;  /* 稳 绿 */
+  --c-safe: #2f6fb0;    /* 保 蓝 */
+  --c-bg: #f5f6f8;
+  --c-card: #ffffff;
+  --c-text: #1f2329;
+  --c-muted: #8a909a;
+  --c-border: #e6e8eb;
+  --c-primary: #3b6fe0;
+  --radius: 12px;
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { min-height: 100vh; }
+
+/* 移动优先: 内容容器最大宽度, 居中 */
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 40px;
+}
+
+h1 { font-size: 1.4rem; margin: 0.4em 0; }
+h2 { font-size: 1.15rem; margin: 0.6em 0 0.4em; }
+
+.muted { color: var(--c-muted); font-size: 0.85rem; }
+
+/* ---- 卡片 ---- */
+.card {
+  background: var(--c-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+/* ---- 表单控件 ---- */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: #4a5057; }
+
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: #fff;
+  outline: none;
+}
+input:focus, select:focus { border-color: var(--c-primary); }
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--c-primary);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn:active { opacity: 0.85; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ghost {
+  background: #fff;
+  color: var(--c-primary);
+  border: 1px solid var(--c-primary);
+}
+.btn-sm { width: auto; padding: 8px 14px; font-size: 0.9rem; }
+
+/* ---- 冲稳保分组 ---- */
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  margin: 18px 0 8px;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.8rem;
+}
+.badge-reach { background: var(--c-reach); }
+.badge-stable { background: var(--c-stable); }
+.badge-safe { background: var(--c-safe); }
+
+.school-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  margin-bottom: 8px;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+}
+.school-item.reach { border-left-color: var(--c-reach); }
+.school-item.stable { border-left-color: var(--c-stable); }
+.school-item.safe { border-left-color: var(--c-safe); }
+.school-item .name { font-weight: 600; }
+.school-item .meta { font-size: 0.8rem; color: var(--c-muted); margin-top: 2px; }
+.school-item .rank { text-align: right; font-size: 0.85rem; color: #4a5057; }
+
+/* ---- 提示/声明 ---- */
+.disclaimer {
+  font-size: 0.78rem;
+  color: var(--c-muted);
+  text-align: center;
+  margin-top: 24px;
+  line-height: 1.5;
+}
+.error { color: #d23b3b; font-size: 0.9rem; margin-top: 8px; }
+
+/* ---- 弹层(学校详情) ---- */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: flex-end;
+  z-index: 100;
+}
+.sheet {
+  background: #fff;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 16px 28px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--c-border); }
+th { color: var(--c-muted); font-weight: 600; }
+
+/* ---- 顶部导航(管理后台) ---- */
+.topbar {
+  display: flex; gap: 14px; align-items: center;
+  padding: 12px 16px; background: #fff; box-shadow: var(--shadow);
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar a { color: #4a5057; text-decoration: none; font-size: 0.95rem; }
+.topbar a.router-link-active { color: var(--c-primary); font-weight: 600; }
+.topbar .spacer { flex: 1; }
