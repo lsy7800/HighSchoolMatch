@@ -45,9 +45,22 @@ python -m scripts.seed_2025      # 建库 + 导入 2025 数据 + 校验
 ## 进度
 
 - [x] M1 项目骨架 + 数据库模型 + 2025 数据导入与校验
-- [ ] M2 匹配引擎（位次换算 / 等位分 / 冲稳保）+ 公开 API
+- [x] M2 匹配引擎（位次换算 / 等位分 / 冲稳保）+ 公开 API
 - [ ] M3 学生前端
-- [ ] M4 管理后台（登录 + xlsx 导入 + CRUD + 阈值配置）
+- [x] M4 管理后台后端（登录 + xlsx 导入 + CRUD + 阈值配置）
 - [ ] M5 打磨（趋势图 / 文案 / 免责声明）
+
+## 管理后台 API（M4）
+
+需先登录拿 token，后续请求带 `Authorization: Bearer <token>`。
+
+- `POST /api/admin/login`（表单 username/password）→ access_token
+- `POST /api/admin/import/score-rank`、`/import/schools`（上传 xlsx，`commit=false` 预览 / `commit=true` 入库）
+- `GET/PUT/DELETE /api/admin/schools`、`PUT /api/admin/schools/{id}/stat`
+- `GET/PUT/DELETE /api/admin/score-rank`
+- `GET/PUT /api/admin/config`（冲稳保阈值）
+
+默认管理员账号 `admin` / `admin123`，**生产环境务必用环境变量覆盖**：
+`ADMIN_USERNAME`、`ADMIN_PASSWORD`、`JWT_SECRET`。
 
 > 免责声明：本系统结果仅供参考，志愿填报请以官方招生政策与正式发布数据为准。

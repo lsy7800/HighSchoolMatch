@@ -61,3 +61,54 @@ class SchoolDetail(BaseModel):
     phone: str | None = None
     remark: str | None = None
     stats: list[YearStat]
+
+
+# ---------------- Admin ----------------
+class SchoolListItem(BaseModel):
+    id: int
+    code: str
+    name: str
+    scope: str
+    type: str | None = None
+    location_district: str | None = None
+
+
+class SchoolUpdate(BaseModel):
+    """学校静态字段更新(全部可选, 只改传入的字段)。"""
+
+    name: str | None = None
+    type: str | None = None
+    home_district: str | None = None
+    location_district: str | None = None
+    recruit_area: str | None = None
+    boarding: str | None = None
+    canteen: str | None = None
+    class_types: str | None = None
+    fee: str | None = None
+    dorm_fee: str | None = None
+    address: str | None = None
+    phone: str | None = None
+    remark: str | None = None
+
+
+class StatUpsert(BaseModel):
+    """新增/修改某校某年的录取数据。"""
+
+    year: int
+    plan: int | None = None
+    min_score: float | None = None
+    rank_city6: int | None = None
+    rank_whole: int | None = None
+
+
+class ScoreRankUpdate(BaseModel):
+    cum_whole: int | None = None
+    cum_city6: int | None = None
+    band_whole: int | None = None
+    band_city6: int | None = None
+
+
+class ConfigUpdate(BaseModel):
+    """阈值配置更新, 键值对。"""
+
+    values: dict[str, float]
