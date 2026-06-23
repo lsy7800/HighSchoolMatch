@@ -36,10 +36,16 @@ export const adminMe = () => api.get('/admin/me').then((r) => r.data)
 export const adminListSchools = (params) =>
   api.get('/admin/schools', { params }).then((r) => r.data)
 export const adminGetSchool = (id) => api.get(`/admin/schools/${id}`).then((r) => r.data)
+export const adminCreateSchool = (payload) =>
+  api.post('/admin/schools', payload).then((r) => r.data)
 export const adminUpdateSchool = (id, payload) =>
   api.put(`/admin/schools/${id}`, payload).then((r) => r.data)
+export const adminDeleteSchool = (id) =>
+  api.delete(`/admin/schools/${id}`).then((r) => r.data)
 export const adminUpsertStat = (id, payload) =>
   api.put(`/admin/schools/${id}/stat`, payload).then((r) => r.data)
+export const adminDeleteStat = (id, year) =>
+  api.delete(`/admin/schools/${id}/stat/${year}`).then((r) => r.data)
 export const adminGetConfig = () => api.get('/admin/config').then((r) => r.data)
 export const adminUpdateConfig = (values) =>
   api.put('/admin/config', { values }).then((r) => r.data)

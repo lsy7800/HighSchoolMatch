@@ -91,6 +91,29 @@ class SchoolUpdate(BaseModel):
     remark: str | None = None
 
 
+class SchoolCreate(BaseModel):
+    """新增学校。code + scope + name 必填, 其余可选。
+
+    (code, scope) 为业务主键: 同一代码可在不同招生口径下各存一条。
+    """
+
+    code: str
+    scope: str  # city6 / whole / suburb
+    name: str
+    type: str | None = None
+    home_district: str | None = None
+    location_district: str | None = None
+    recruit_area: str | None = None
+    boarding: str | None = None
+    canteen: str | None = None
+    class_types: str | None = None
+    fee: str | None = None
+    dorm_fee: str | None = None
+    address: str | None = None
+    phone: str | None = None
+    remark: str | None = None
+
+
 class StatUpsert(BaseModel):
     """新增/修改某校某年的录取数据。"""
 

@@ -100,7 +100,61 @@ def test_upsert_stat(client, token):
     assert r.status_code == 200
     years = {s["year"] for s in r.json()["stats"]}
     assert 2021 in years
-    # cleanup: overwrite 2021 back to nulls is fine; leave it, harmless extra year
+
+    # cleanup: delete the test year via the delete-stat endpoint
+    r2 = client.delete(f"/api/admin/schools/{sid}/stat/2021", headers=auth(token))
+    assert r2.status_code == 200
+    assert 2021 not in {s["year"] for s in r2.json()["stats"]}
+
+
+def test_delete_stat_missing_year(client, token):
+    lst = client.get("/api/admin/schools?q=天津一中", headers=auth(token)).json()
+    sid = next(s["id"] for s in lst if s["code"] == "10101")
+    r = client.delete(f"/api/admin/schools/{sid}/stat/1999", headers=auth(token))
+    assert r.status_code == 404
+
+
+def test_create_and_delete_school(client, token):
+    # create
+    r = client.post(
+        "/api/admin/schools",
+        json={"code": "99999", "scope": "city6", "name": "测试中学", "type": "公办"},
+        headers=auth(token),
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["name"] == "测试中学"
+
+    # duplicate (code, scope) -> 409
+    r2 = client.post(
+        "/api/admin/schools",
+        json={"code": "99999", "scope": "city6", "name": "测试中学2"},
+        headers=auth(token),
+    )
+    assert r2.status_code == 409
+
+    # same code, different scope -> allowed
+    r3 = client.post(
+        "/api/admin/schools",
+        json={"code": "99999", "scope": "whole", "name": "测试中学全市"},
+        headers=auth(token),
+    )
+    assert r3.status_code == 201
+
+    # invalid scope -> 400
+    r4 = client.post(
+        "/api/admin/schools",
+        json={"code": "88888", "scope": "bogus", "name": "x"},
+        headers=auth(token),
+    )
+    assert r4.status_code == 400
+
+    # cleanup: delete both created channels
+    lst = client.get("/api/admin/schools?q=99999", headers=auth(token)).json()
+    assert len(lst) == 2
+    for s in lst:
+        rd = client.delete(f"/api/admin/schools/{s['id']}", headers=auth(token))
+        assert rd.status_code == 200
+    assert client.get("/api/admin/schools?q=99999", headers=auth(token)).json() == []
 
 
 # ---------------- 一分档 ----------------

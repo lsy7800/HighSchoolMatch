@@ -84,6 +84,9 @@ input:focus, select:focus { border-color: var(--c-primary); }
   border: 1px solid var(--c-primary);
 }
 .btn-sm { width: auto; padding: 8px 14px; font-size: 0.9rem; }
+.btn-danger { background: #d23b3b; color: #fff; }
+.link-danger { color: #d23b3b; font-size: 0.85rem; cursor: pointer; }
+.link-danger:active { opacity: 0.7; }
 
 /* ---- 冲稳保分组 ---- */
 .group-title {

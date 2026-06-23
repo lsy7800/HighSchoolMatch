@@ -19,10 +19,11 @@ from ..auth import create_token, get_current_admin, verify_credentials
 from ..database import get_db
 from ..importers.schools_xlsx import import_schools, parse_schools
 from ..importers.score_rank_xlsx import import_score_rank, parse_score_rank
-from ..models import AppConfig, School, SchoolStat, ScoreRank
+from ..models import SCOPE_CITY6, SCOPE_SUBURB, SCOPE_WHOLE, AppConfig, School, SchoolStat, ScoreRank
 from ..schemas import (
     ConfigUpdate,
     ScoreRankUpdate,
+    SchoolCreate,
     SchoolDetail,
     SchoolListItem,
     SchoolUpdate,
@@ -122,6 +123,29 @@ def _school_to_detail(s: School) -> SchoolDetail:
     )
 
 
+@router.post("/schools", response_model=SchoolDetail, status_code=201)
+def create_school(
+    payload: SchoolCreate,
+    db: Session = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    """新增学校。校验 scope 合法、(code, scope) 唯一。"""
+    if payload.scope not in (SCOPE_CITY6, SCOPE_WHOLE, SCOPE_SUBURB):
+        raise HTTPException(400, f"非法招生口径: {payload.scope}")
+    exists = (
+        db.query(School)
+        .filter(School.code == payload.code, School.scope == payload.scope)
+        .first()
+    )
+    if exists:
+        raise HTTPException(409, f"学校已存在: 代码 {payload.code} / {payload.scope}")
+    school = School(**payload.model_dump())
+    db.add(school)
+    db.commit()
+    db.refresh(school)
+    return _school_to_detail(school)
+
+
 @router.get("/schools", response_model=list[SchoolListItem])
 def list_schools(
     scope: str | None = None,
@@ -212,6 +236,29 @@ def upsert_stat(
     stat.min_score = payload.min_score
     stat.rank_city6 = payload.rank_city6
     stat.rank_whole = payload.rank_whole
+    db.commit()
+    db.refresh(s)
+    return _school_to_detail(s)
+
+
+@router.delete("/schools/{school_id}/stat/{year}", response_model=SchoolDetail)
+def delete_stat(
+    school_id: int,
+    year: int,
+    db: Session = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    """删除某校某年的录取数据。"""
+    s = db.get(School, school_id)
+    if not s:
+        raise HTTPException(404, "学校不存在")
+    n = (
+        db.query(SchoolStat)
+        .filter(SchoolStat.school_id == school_id, SchoolStat.year == year)
+        .delete()
+    )
+    if not n:
+        raise HTTPException(404, f"该校无 {year} 年数据")
     db.commit()
     db.refresh(s)
     return _school_to_detail(s)
