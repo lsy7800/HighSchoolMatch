@@ -90,6 +90,26 @@ def test_recommend_scope_uses_right_rank(db):
                 assert x["student_rank"] == res["rank_whole"]
 
 
+def test_low_score_mode(db):
+    # 低于最低档(500)的分数: 触发低分模式, 不分冲稳保, 给 reachable 列表
+    res = recommend(db, 450, 2025)
+    assert res["low_score_mode"] is True
+    assert res["reach"] == [] and res["stable"] == [] and res["safe"] == []
+    assert len(res["reachable"]) > 0
+    # reachable 按录取门槛从低到高(school_rank 降序: 位次越大门槛越低)
+    ranks = [x["school_rank"] for x in res["reachable"]]
+    assert ranks == sorted(ranks, reverse=True)
+
+
+def test_normal_mode_not_low(db):
+    # 正常分数不应进低分模式
+    res = recommend(db, 720, 2025)
+    assert res["low_score_mode"] is False
+    assert res["reachable"] == []
+    # 恰好在最低档(500)也不算低分模式
+    assert recommend(db, 500, 2025)["low_score_mode"] is False
+
+
 # ---- API ----
 def test_api_years(client):
     r = client.get("/api/years")

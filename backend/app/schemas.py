@@ -18,7 +18,7 @@ class SchoolMatch(BaseModel):
     student_rank: int
     min_score: float | None = None
     plan: int | None = None
-    ratio: float
+    ratio: float | None = None
 
 
 class RecommendResponse(BaseModel):
@@ -30,7 +30,9 @@ class RecommendResponse(BaseModel):
     equiv_score_whole: int | None = None
     equiv_score_city6: int | None = None
     out_of_range: bool
+    low_score_mode: bool = False  # 分数低于一分档最低档: 改为 reachable 列表
     config: dict[str, float]
+    reachable: list[SchoolMatch] = []  # 低分模式下的"能上哪所上哪所"列表
     reach: list[SchoolMatch]
     stable: list[SchoolMatch]
     safe: list[SchoolMatch]

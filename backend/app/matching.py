@@ -58,6 +58,7 @@ class RankResult:
     rank_whole: int       # 全市位次
     rank_city6: int       # 市内六区位次
     out_of_range: bool    # 是否超出一分档范围(已夹取边界)
+    below_floor: bool     # 是否低于最低档(分数过低, 触发"能上哪所上哪所"模式)
 
 
 def _load_bands(db: Session, year: int) -> list[ScoreRank]:
@@ -83,6 +84,7 @@ def score_to_rank(db: Session, score: float, year: int) -> RankResult | None:
     top, bottom = bands[0], bands[-1]  # top=最高分, bottom=最低分
     floor_score = int(score // 1)
     out = False
+    below = False
 
     if floor_score >= top.score:
         b = top
@@ -90,6 +92,7 @@ def score_to_rank(db: Session, score: float, year: int) -> RankResult | None:
     elif floor_score <= bottom.score:
         b = bottom
         out = floor_score < bottom.score
+        below = floor_score < bottom.score  # 严格低于最低档 -> 低分模式
     else:
         # 找到 score 恰好等于 floor_score 的档(一分档为连续整数, 必命中)
         b = next((x for x in bands if x.score == floor_score), None)
@@ -103,6 +106,7 @@ def score_to_rank(db: Session, score: float, year: int) -> RankResult | None:
         rank_whole=b.cum_whole,
         rank_city6=b.cum_city6,
         out_of_range=out,
+        below_floor=below,
     )
 
 
@@ -143,6 +147,37 @@ def _student_rank_for_scope(rank: RankResult, scope: str) -> int:
     return rank.rank_city6 if scope == SCOPE_CITY6 else rank.rank_whole
 
 
+def _school_entry(s, stat, school_rank, student_rank) -> dict:
+    return {
+        "code": s.code,
+        "name": s.name,
+        "scope": s.scope,
+        "type": s.type,
+        "location_district": s.location_district,
+        "school_rank": school_rank,
+        "student_rank": student_rank,
+        "min_score": stat.min_score,
+        "plan": stat.plan,
+        "ratio": round(student_rank / school_rank, 4) if school_rank else None,
+    }
+
+
+def _iter_school_stats(db: Session, ref_year: int):
+    """逐校产出 (school, stat, school_rank), 跳过无数据/无位次的。"""
+    for s in db.query(School).all():
+        stat = (
+            db.query(SchoolStat)
+            .filter(SchoolStat.school_id == s.id, SchoolStat.year == ref_year)
+            .first()
+        )
+        if stat is None:
+            continue
+        school_rank = stat.rank_city6 if s.scope == SCOPE_CITY6 else stat.rank_whole
+        if not school_rank:
+            continue
+        yield s, stat, school_rank
+
+
 def recommend(
     db: Session, score: float, year: int, ref_year: int | None = None
 ) -> dict:
@@ -151,6 +186,10 @@ def recommend(
     year:     用于把分数换算成位次的一分档年份(今年)。
     ref_year: 用于"等位分"和学校录取数据比对的年份(默认同 year)。
               2026 上线后传 year=2026, ref_year=2025。
+
+    低分模式: 当分数低于一分档最低档(below_floor)时, 冲/稳/保 已无意义,
+    改为返回单一 reachable 列表(所有学校按录取门槛从低到高排序,
+    "能上哪所上哪所"), 并置 low_score_mode=True。
     """
     ref_year = ref_year or year
     cfg = get_config(db)
@@ -163,46 +202,7 @@ def recommend(
     equiv_whole = rank_to_equiv_score(db, rank.rank_whole, ref_year, scope_whole=True)
     equiv_city6 = rank_to_equiv_score(db, rank.rank_city6, ref_year, scope_whole=False)
 
-    buckets = {CATEGORY_REACH: [], CATEGORY_STABLE: [], CATEGORY_SAFE: []}
-
-    schools = db.query(School).all()
-    for s in schools:
-        stat = (
-            db.query(SchoolStat)
-            .filter(SchoolStat.school_id == s.id, SchoolStat.year == ref_year)
-            .first()
-        )
-        if stat is None:
-            continue
-        school_rank = stat.rank_city6 if s.scope == SCOPE_CITY6 else stat.rank_whole
-        if not school_rank:
-            continue
-
-        student_rank = _student_rank_for_scope(rank, s.scope)
-        cat = classify(student_rank, school_rank, cfg)
-        if cat is None:
-            continue
-
-        buckets[cat].append(
-            {
-                "code": s.code,
-                "name": s.name,
-                "scope": s.scope,
-                "type": s.type,
-                "location_district": s.location_district,
-                "school_rank": school_rank,
-                "student_rank": student_rank,
-                "min_score": stat.min_score,
-                "plan": stat.plan,
-                "ratio": round(student_rank / school_rank, 4),
-            }
-        )
-
-    # 每组按 ratio 升序(越接近达线越靠前)
-    for items in buckets.values():
-        items.sort(key=lambda x: x["ratio"])
-
-    return {
+    base = {
         "score": score,
         "year": year,
         "ref_year": ref_year,
@@ -211,7 +211,42 @@ def recommend(
         "equiv_score_whole": equiv_whole,
         "equiv_score_city6": equiv_city6,
         "out_of_range": rank.out_of_range,
+        "low_score_mode": rank.below_floor,
         "config": cfg,
+    }
+
+    # ---- 低分模式: 不分冲稳保, 列出所有学校(门槛从低到高) ----
+    if rank.below_floor:
+        reachable = []
+        for s, stat, school_rank in _iter_school_stats(db, ref_year):
+            student_rank = _student_rank_for_scope(rank, s.scope)
+            reachable.append(_school_entry(s, stat, school_rank, student_rank))
+        # 录取位次越大=门槛越低=越容易上, 放最前
+        reachable.sort(key=lambda x: -x["school_rank"])
+        return {
+            **base,
+            "reachable": reachable,
+            "reach": [],
+            "stable": [],
+            "safe": [],
+        }
+
+    # ---- 正常模式: 冲/稳/保 ----
+    buckets = {CATEGORY_REACH: [], CATEGORY_STABLE: [], CATEGORY_SAFE: []}
+    for s, stat, school_rank in _iter_school_stats(db, ref_year):
+        student_rank = _student_rank_for_scope(rank, s.scope)
+        cat = classify(student_rank, school_rank, cfg)
+        if cat is None:
+            continue
+        buckets[cat].append(_school_entry(s, stat, school_rank, student_rank))
+
+    # 每组按 ratio 升序(越接近达线越靠前)
+    for items in buckets.values():
+        items.sort(key=lambda x: x["ratio"])
+
+    return {
+        **base,
+        "reachable": [],
         "reach": buckets[CATEGORY_REACH],
         "stable": buckets[CATEGORY_STABLE],
         "safe": buckets[CATEGORY_SAFE],

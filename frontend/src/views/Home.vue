@@ -122,6 +122,38 @@ async function submit() {
     </div>
 
     <template v-if="result">
+      <!-- 低分模式: 不分冲稳保, 按录取门槛从低到高列出 -->
+      <template v-if="result.low_score_mode">
+        <div class="card" style="background:#fff7ec">
+          你的分数低于本档数据的最低分，已不区分「冲/稳/保」。<br />
+          下列学校按<strong>历年录取门槛由低到高</strong>排序，越靠前越容易录取，建议优先考虑。
+        </div>
+        <div class="group-title">
+          <span>可考虑的学校</span>
+          <span class="muted">{{ result.reachable.length }} 所（门槛低→高）</span>
+        </div>
+        <div
+          v-for="s in result.reachable"
+          :key="s.code + s.scope"
+          class="school-item safe"
+          @click="activeCode = s.code"
+        >
+          <div>
+            <div class="name">{{ s.name }}</div>
+            <div class="meta">
+              {{ scopeLabel[s.scope] }} · {{ s.type || '—' }} ·
+              {{ s.location_district || '' }}
+            </div>
+          </div>
+          <div class="rank">
+            <div>录取位次 {{ s.school_rank }}</div>
+            <div class="muted">最低分 {{ s.min_score ?? '—' }}</div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 正常模式: 冲/稳/保 -->
+      <template v-else>
       <div v-if="totalMatches === 0" class="card muted">
         没有匹配到合适的学校。可能分数过高或过低、超出现有学校的录取范围；可在管理后台调整阈值后再试。
       </div>
@@ -151,6 +183,7 @@ async function submit() {
           </div>
         </div>
       </div>
+      </template>
     </template>
 
     <p class="disclaimer">
