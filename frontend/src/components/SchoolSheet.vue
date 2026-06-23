@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { getSchool } from '../api'
+import TrendChart from './TrendChart.vue'
 
 const props = defineProps({ code: String })
 const emit = defineEmits(['close'])
@@ -10,6 +11,15 @@ const channels = ref([]) // 一个 code 可能有多条招生线
 const error = ref('')
 
 const scopeLabel = { city6: '市内六区', whole: '全市', suburb: '郊区' }
+
+// 该招生线用哪个位次列(六区看市区位次, 其余看全市)
+function rankPoints(s) {
+  const key = s.scope === 'city6' ? 'rank_city6' : 'rank_whole'
+  return s.stats.map((st) => ({ year: st.year, value: st[key] }))
+}
+function scorePoints(s) {
+  return s.stats.map((st) => ({ year: st.year, value: st.min_score }))
+}
 
 watch(
   () => props.code,
@@ -43,6 +53,21 @@ watch(
         <p v-if="s.address" class="muted">📍 {{ s.address }}</p>
         <p v-if="s.phone" class="muted">☎ {{ s.phone }}</p>
         <p v-if="s.class_types" class="muted">班型：{{ s.class_types }}</p>
+
+        <h2 style="margin-top:16px">历年趋势</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <TrendChart
+              :points="rankPoints(s)"
+              :invert="true"
+              color="#3b6fe0"
+              :label="(s.scope === 'city6' ? '市区' : '全市') + '录取位次（越低越好）'"
+            />
+          </div>
+          <div style="flex:1;min-width:200px">
+            <TrendChart :points="scorePoints(s)" color="#2e9e5b" label="录取最低分" />
+          </div>
+        </div>
 
         <h2 style="margin-top:16px">历年录取</h2>
         <table>
