@@ -53,3 +53,15 @@ html, body {
   font-size: 1.05rem;
   font-weight: 600;
 }
+
+/* ---- 页面 Hero 区域 ---- */
+.hero {
+  background: linear-gradient(135deg, var(--el-color-primary) 0%, #5b8def 100%);
+  color: #fff;
+  text-align: center;
+  padding: 40px 16px 44px;
+}
+.hero-sm { padding: 28px 16px 32px; }
+.hero-inner { max-width: 720px; margin: 0 auto; }
+.hero h1 { margin: 0 0 10px; font-size: 1.7rem; font-weight: 700; }
+.hero p { margin: 0; opacity: 0.92; font-size: 0.98rem; line-height: 1.6; }

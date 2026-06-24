@@ -23,6 +23,33 @@ def _latest_year(db: Session) -> int | None:
     return row[0] if row else None
 
 
+@router.get("/score-rank")
+def score_rank_table(year: int | None = None, db: Session = Depends(get_db)):
+    """某年一分一段表(分数降序), 供学生查看。默认最新年份。"""
+    year = year or _latest_year(db)
+    if year is None:
+        raise HTTPException(404, "无一分档数据")
+    rows = (
+        db.query(ScoreRank)
+        .filter(ScoreRank.year == year)
+        .order_by(ScoreRank.score.desc())
+        .all()
+    )
+    return {
+        "year": year,
+        "rows": [
+            {
+                "score": r.score,
+                "cum_whole": r.cum_whole,
+                "cum_city6": r.cum_city6,
+                "band_whole": r.band_whole,
+                "band_city6": r.band_city6,
+            }
+            for r in rows
+        ],
+    }
+
+
 @router.post("/recommend", response_model=RecommendResponse)
 def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
     year = req.year or _latest_year(db)

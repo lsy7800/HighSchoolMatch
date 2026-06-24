@@ -60,11 +60,17 @@ async function submit() {
 </script>
 
 <template>
-  <div class="page">
-    <div class="query-box">
-      <h1 class="title">中考志愿填报辅助</h1>
-      <p class="subtitle">输入中考分数，按「位次」匹配可报高中（面向市内六区考生）</p>
+  <div>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>智能匹配你的中考志愿</h1>
+        <p>输入中考分数，用「位次法」一键找到可冲、可稳、可保的高中（面向市内六区考生）</p>
+      </div>
+    </section>
 
+    <div class="page">
+    <div class="query-box">
       <el-collapse class="help">
         <el-collapse-item title="什么是「位次法」？为什么不直接比分数？" name="1">
           <p>每年中考题目难易不同，<b>同样的分数对应的名次会变</b>，所以拿今年的分数直接比往年的录取分并不准。</p>
@@ -185,10 +191,12 @@ async function submit() {
     </p>
 
     <SchoolSheet v-model="sheetVisible" :code="activeCode" />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.page { margin-top: -22px; }
 .query-box { max-width: 560px; margin: 0 auto; }
 .title { text-align: center; margin: 8px 0 4px; }
 .subtitle { text-align: center; color: var(--c-muted); margin: 0 0 16px; }

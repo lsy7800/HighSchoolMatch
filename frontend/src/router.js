@@ -1,8 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import PublicLayout from './views/PublicLayout.vue'
 import Home from './views/Home.vue'
 
 const routes = [
-  { path: '/', component: Home, name: 'home' },
+  {
+    path: '/',
+    component: PublicLayout,
+    children: [
+      { path: '', component: Home, name: 'home' },
+      {
+        path: 'score-rank',
+        component: () => import('./views/ScoreRank.vue'),
+        name: 'score-rank',
+      },
+    ],
+  },
   {
     path: '/admin/login',
     component: () => import('./views/admin/Login.vue'),
