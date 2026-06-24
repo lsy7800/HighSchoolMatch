@@ -154,6 +154,8 @@ def _school_entry(s, stat, school_rank, student_rank) -> dict:
         "scope": s.scope,
         "type": s.type,
         "location_district": s.location_district,
+        "boarding": s.boarding,
+        "class_types": s.class_types,
         "school_rank": school_rank,
         "student_rank": student_rank,
         "min_score": stat.min_score,

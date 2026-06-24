@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { getYears, recommend } from '../api'
 import SchoolSheet from '../components/SchoolSheet.vue'
+import SchoolCard from '../components/SchoolCard.vue'
 
 const years = ref([])
 const score = ref('')
@@ -19,8 +20,6 @@ const groups = computed(() => {
     { key: 'safe', label: '保', cls: 'safe', badge: 'badge-safe', items: result.value.safe },
   ]
 })
-
-const scopeLabel = { city6: '市内六区', whole: '全市', suburb: '郊区' }
 
 const totalMatches = computed(() =>
   result.value ? result.value.reach.length + result.value.stable.length + result.value.safe.length : 0
@@ -56,6 +55,7 @@ async function submit() {
 
 <template>
   <div class="page">
+    <div class="query-box">
     <h1>中考志愿填报辅助</h1>
     <p class="muted">输入你的中考分数，按「位次」匹配可报高中（面向市内六区考生）</p>
 
@@ -120,6 +120,8 @@ async function submit() {
         ⚠ 分数超出一分档范围，已按边界估算
       </p>
     </div>
+    </div>
+    <!-- /.query-box -->
 
     <template v-if="result">
       <!-- 低分模式: 不分冲稳保, 按录取门槛从低到高列出 -->
@@ -132,57 +134,38 @@ async function submit() {
           <span>可考虑的学校</span>
           <span class="muted">{{ result.reachable.length }} 所（门槛低→高）</span>
         </div>
-        <div
-          v-for="s in result.reachable"
-          :key="s.code + s.scope"
-          class="school-item safe"
-          @click="activeCode = s.code"
-        >
-          <div>
-            <div class="name">{{ s.name }}</div>
-            <div class="meta">
-              {{ scopeLabel[s.scope] }} · {{ s.type || '—' }} ·
-              {{ s.location_district || '' }}
-            </div>
-          </div>
-          <div class="rank">
-            <div>录取位次 {{ s.school_rank }}</div>
-            <div class="muted">最低分 {{ s.min_score ?? '—' }}</div>
-          </div>
+        <div class="school-grid">
+          <SchoolCard
+            v-for="s in result.reachable"
+            :key="s.code + s.scope"
+            :s="s"
+            cls="safe"
+            @click="activeCode = s.code"
+          />
         </div>
       </template>
 
       <!-- 正常模式: 冲/稳/保 -->
       <template v-else>
-      <div v-if="totalMatches === 0" class="card muted">
-        没有匹配到合适的学校。可能分数过高或过低、超出现有学校的录取范围；可在管理后台调整阈值后再试。
-      </div>
-      <div v-for="g in groups" :key="g.key">
-        <div class="group-title">
-          <span class="badge" :class="g.badge">{{ g.label }}</span>
-          <span>{{ g.items.length }} 所</span>
+        <div v-if="totalMatches === 0" class="card muted">
+          没有匹配到合适的学校。可能分数过高或过低、超出现有学校的录取范围；可在管理后台调整阈值后再试。
         </div>
-        <p v-if="!g.items.length" class="muted">暂无匹配学校</p>
-        <div
-          v-for="s in g.items"
-          :key="s.code + s.scope"
-          class="school-item"
-          :class="g.cls"
-          @click="activeCode = s.code"
-        >
-          <div>
-            <div class="name">{{ s.name }}</div>
-            <div class="meta">
-              {{ scopeLabel[s.scope] }} · {{ s.type || '—' }} ·
-              {{ s.location_district || '' }}
-            </div>
+        <div v-for="g in groups" :key="g.key">
+          <div class="group-title">
+            <span class="badge" :class="g.badge">{{ g.label }}</span>
+            <span>{{ g.items.length }} 所</span>
           </div>
-          <div class="rank">
-            <div>录取位次 {{ s.school_rank }}</div>
-            <div class="muted">最低分 {{ s.min_score ?? '—' }}</div>
+          <p v-if="!g.items.length" class="muted">暂无匹配学校</p>
+          <div class="school-grid">
+            <SchoolCard
+              v-for="s in g.items"
+              :key="s.code + s.scope"
+              :s="s"
+              :cls="g.cls"
+              @click="activeCode = s.code"
+            />
           </div>
         </div>
-      </div>
       </template>
     </template>
 

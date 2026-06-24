@@ -26,7 +26,7 @@ async function login() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="page page--narrow">
     <h1>管理后台登录</h1>
     <div class="card">
       <div class="field">

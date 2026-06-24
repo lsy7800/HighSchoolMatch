@@ -161,14 +161,16 @@ function num(v) { return v === '' || v === null ? null : Number(v) }
   <p v-if="loading" class="muted">加载中…</p>
   <p class="muted">共 {{ list.length }} 所</p>
 
-  <div v-for="s in list" :key="s.id" class="school-item">
-    <div style="flex:1;cursor:pointer" @click="openEdit(s)">
-      <div class="name">{{ s.name }}</div>
-      <div class="meta">{{ s.code }} · {{ s.type || '—' }} · {{ s.location_district || '' }}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span class="rank muted" style="cursor:pointer" @click="openEdit(s)">编辑 ›</span>
-      <span class="link-danger" @click.stop="removeSchool(s)">删除</span>
+  <div class="school-grid">
+    <div v-for="s in list" :key="s.id" class="school-item">
+      <div style="flex:1;cursor:pointer;min-width:0" @click="openEdit(s)">
+        <div class="name">{{ s.name }}</div>
+        <div class="meta">{{ s.code }} · {{ s.type || '—' }} · {{ s.location_district || '' }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="rank muted" style="cursor:pointer" @click="openEdit(s)">编辑 ›</span>
+        <span class="link-danger" @click.stop="removeSchool(s)">删除</span>
+      </div>
     </div>
   </div>
 

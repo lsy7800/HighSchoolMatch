@@ -14,6 +14,8 @@ class SchoolMatch(BaseModel):
     scope: str
     type: str | None = None
     location_district: str | None = None
+    boarding: str | None = None
+    class_types: str | None = None
     school_rank: int
     student_rank: int
     min_score: float | None = None

@@ -50,9 +50,20 @@ watch(
           {{ scopeLabel[s.scope] }}招生 · {{ s.type || '—' }} ·
           {{ s.location_district || '' }}
         </p>
+
+        <div class="info-grid">
+          <div v-if="s.home_district"><span class="k">归属区</span>{{ s.home_district }}</div>
+          <div v-if="s.recruit_area"><span class="k">招生区域</span>{{ s.recruit_area }}</div>
+          <div><span class="k">住宿</span>{{ s.boarding || '—' }}</div>
+          <div><span class="k">食堂</span>{{ s.canteen || '—' }}</div>
+          <div v-if="s.fee"><span class="k">学费</span>{{ s.fee }}</div>
+          <div v-if="s.dorm_fee"><span class="k">住宿费</span>{{ s.dorm_fee }}</div>
+        </div>
+
+        <p v-if="s.class_types" class="muted" style="margin-top:8px">班型：{{ s.class_types }}</p>
         <p v-if="s.address" class="muted">📍 {{ s.address }}</p>
         <p v-if="s.phone" class="muted">☎ {{ s.phone }}</p>
-        <p v-if="s.class_types" class="muted">班型：{{ s.class_types }}</p>
+        <p v-if="s.remark" class="muted">备注：{{ s.remark }}</p>
 
         <h2 style="margin-top:16px">历年趋势</h2>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
