@@ -17,7 +17,7 @@
 ## 技术栈
 
 - 后端：FastAPI + SQLAlchemy 2.0 + SQLite
-- 前端：Vue3 + Vite（学生端 + `/admin` 管理后台）
+- 前端：Vue3 + Vite + Element Plus（学生端 + `/admin` 管理后台，响应式）
 - 数据导入：openpyxl 解析 xlsx
 
 ## 目录结构

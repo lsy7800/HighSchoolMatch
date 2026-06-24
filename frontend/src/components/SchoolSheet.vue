@@ -1,10 +1,18 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { getSchool } from '../api'
 import TrendChart from './TrendChart.vue'
 
-const props = defineProps({ code: String })
-const emit = defineEmits(['close'])
+const props = defineProps({
+  code: String,
+  modelValue: { type: Boolean, default: false },
+})
+const emit = defineEmits(['update:modelValue'])
+
+const visible = computed({
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v),
+})
 
 const loading = ref(false)
 const channels = ref([]) // 一个 code 可能有多条招生线
@@ -12,7 +20,6 @@ const error = ref('')
 
 const scopeLabel = { city6: '市内六区', whole: '全市', suburb: '郊区' }
 
-// 该招生线用哪个位次列(六区看市区位次, 其余看全市)
 function rankPoints(s) {
   const key = s.scope === 'city6' ? 'rank_city6' : 'rank_whole'
   return s.stats.map((st) => ({ year: st.year, value: st[key] }))
@@ -22,14 +29,15 @@ function scorePoints(s) {
 }
 
 watch(
-  () => props.code,
-  async (code) => {
-    if (!code) return
+  () => [props.code, props.modelValue],
+  async ([code, open]) => {
+    if (!code || !open) return
     loading.value = true
     error.value = ''
+    channels.value = []
     try {
       channels.value = await getSchool(code)
-    } catch (e) {
+    } catch {
       error.value = '加载失败'
     } finally {
       loading.value = false
@@ -40,71 +48,55 @@ watch(
 </script>
 
 <template>
-  <div class="overlay" @click.self="emit('close')">
-    <div class="sheet">
-      <div v-if="loading" class="muted">加载中…</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <template v-else v-for="(s, i) in channels" :key="i">
-        <h2>{{ s.name }}</h2>
-        <p class="muted">
-          {{ scopeLabel[s.scope] }}招生 · {{ s.type || '—' }} ·
-          {{ s.location_district || '' }}
-        </p>
+  <el-dialog v-model="visible" width="min(720px, 94vw)" top="6vh" :title="channels[0]?.name || '学校详情'">
+    <div v-if="loading" v-loading="true" style="min-height:120px"></div>
+    <el-alert v-else-if="error" :title="error" type="error" :closable="false" />
 
-        <div class="info-grid">
-          <div v-if="s.home_district"><span class="k">归属区</span>{{ s.home_district }}</div>
-          <div v-if="s.recruit_area"><span class="k">招生区域</span>{{ s.recruit_area }}</div>
-          <div><span class="k">住宿</span>{{ s.boarding || '—' }}</div>
-          <div><span class="k">食堂</span>{{ s.canteen || '—' }}</div>
-          <div v-if="s.fee"><span class="k">学费</span>{{ s.fee }}</div>
-          <div v-if="s.dorm_fee"><span class="k">住宿费</span>{{ s.dorm_fee }}</div>
+    <template v-else>
+      <div v-for="(s, i) in channels" :key="i" :style="i ? 'margin-top:24px' : ''">
+        <el-divider v-if="i" />
+        <el-descriptions :column="1" border size="small">
+          <el-descriptions-item label="招生口径">{{ scopeLabel[s.scope] }}</el-descriptions-item>
+          <el-descriptions-item label="性质">{{ s.type || '—' }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.home_district" label="归属区">{{ s.home_district }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.location_district" label="所在区">{{ s.location_district }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.recruit_area" label="招生区域">{{ s.recruit_area }}</el-descriptions-item>
+          <el-descriptions-item label="住宿">{{ s.boarding || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="食堂">{{ s.canteen || '—' }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.class_types" label="班型">{{ s.class_types }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.fee" label="学费">{{ s.fee }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.dorm_fee" label="住宿费">{{ s.dorm_fee }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.address" label="地址">{{ s.address }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.phone" label="电话">{{ s.phone }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.remark" label="备注">{{ s.remark }}</el-descriptions-item>
+        </el-descriptions>
+
+        <h4>历年趋势</h4>
+        <div class="trend-row">
+          <TrendChart
+            :points="rankPoints(s)"
+            :invert="true"
+            color="#3b6fe0"
+            :label="(s.scope === 'city6' ? '市区' : '全市') + '录取位次（越低越好）'"
+          />
+          <TrendChart :points="scorePoints(s)" color="#2e9e5b" label="录取最低分" />
         </div>
 
-        <p v-if="s.class_types" class="muted" style="margin-top:8px">班型：{{ s.class_types }}</p>
-        <p v-if="s.address" class="muted">📍 {{ s.address }}</p>
-        <p v-if="s.phone" class="muted">☎ {{ s.phone }}</p>
-        <p v-if="s.remark" class="muted">备注：{{ s.remark }}</p>
-
-        <h2 style="margin-top:16px">历年趋势</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px">
-            <TrendChart
-              :points="rankPoints(s)"
-              :invert="true"
-              color="#3b6fe0"
-              :label="(s.scope === 'city6' ? '市区' : '全市') + '录取位次（越低越好）'"
-            />
-          </div>
-          <div style="flex:1;min-width:200px">
-            <TrendChart :points="scorePoints(s)" color="#2e9e5b" label="录取最低分" />
-          </div>
-        </div>
-
-        <h2 style="margin-top:16px">历年录取</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>年份</th><th>计划</th><th>最低分</th>
-              <th v-if="s.scope === 'city6'">市区位次</th>
-              <th>全市位次</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="st in s.stats" :key="st.year">
-              <td>{{ st.year }}</td>
-              <td>{{ st.plan ?? '—' }}</td>
-              <td>{{ st.min_score ?? '—' }}</td>
-              <td v-if="s.scope === 'city6'">{{ st.rank_city6 ?? '—' }}</td>
-              <td>{{ st.rank_whole ?? '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <hr v-if="i < channels.length - 1" style="margin:18px 0;border:none;border-top:1px solid var(--c-border)" />
-      </template>
-
-      <button class="btn btn-ghost" style="margin-top:18px" @click="emit('close')">
-        关闭
-      </button>
-    </div>
-  </div>
+        <h4>历年录取</h4>
+        <el-table :data="s.stats" size="small" border>
+          <el-table-column prop="year" label="年份" width="70" />
+          <el-table-column prop="plan" label="计划" />
+          <el-table-column prop="min_score" label="最低分" />
+          <el-table-column v-if="s.scope === 'city6'" prop="rank_city6" label="市区位次" />
+          <el-table-column prop="rank_whole" label="全市位次" />
+        </el-table>
+      </div>
+    </template>
+  </el-dialog>
 </template>
+
+<style scoped>
+h4 { margin: 18px 0 8px; }
+.trend-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.trend-row > * { flex: 1; min-width: 220px; }
+</style>

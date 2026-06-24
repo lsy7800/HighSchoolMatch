@@ -1,31 +1,50 @@
 <script setup>
-// 推荐结果中的单个学校卡片(响应式网格内使用)
+// 推荐结果中的单个学校卡片(Element Plus)
 defineProps({
   s: { type: Object, required: true },
-  cls: { type: String, default: '' }, // reach / stable / safe (左边框色)
+  type: { type: String, default: '' }, // el-tag/边框语义: reach/stable/safe
 })
 const scopeLabel = { city6: '市内六区', whole: '全市', suburb: '郊区' }
+const borderColor = { reach: 'var(--c-reach)', stable: 'var(--c-stable)', safe: 'var(--c-safe)' }
 </script>
 
 <template>
-  <div class="school-item" :class="cls">
-    <div class="info">
-      <div class="name">{{ s.name }}</div>
-      <div class="meta">
-        {{ scopeLabel[s.scope] }} · {{ s.type || '—' }}
-        <template v-if="s.location_district"> · {{ s.location_district }}</template>
+  <el-card
+    shadow="hover"
+    class="school-card"
+    :style="{ borderLeft: `4px solid ${borderColor[type] || 'transparent'}` }"
+    @click="$emit('open')"
+  >
+    <div class="row">
+      <div class="left">
+        <div class="name">{{ s.name }}</div>
+        <div class="muted">
+          {{ scopeLabel[s.scope] }} · {{ s.type || '—' }}
+          <template v-if="s.location_district"> · {{ s.location_district }}</template>
+        </div>
+        <div class="tags">
+          <el-tag v-if="s.class_types" size="small" type="info" effect="plain">
+            {{ s.class_types.length > 10 ? s.class_types.slice(0, 10) + '…' : s.class_types }}
+          </el-tag>
+          <el-tag v-if="s.plan != null" size="small" type="info" effect="plain">计划 {{ s.plan }}</el-tag>
+          <el-tag v-if="s.boarding === '有'" size="small" type="info" effect="plain">可住宿</el-tag>
+        </div>
       </div>
-      <div class="tags">
-        <span v-if="s.class_types" class="tag" :title="s.class_types">
-          {{ s.class_types.length > 12 ? s.class_types.slice(0, 12) + '…' : s.class_types }}
-        </span>
-        <span v-if="s.plan != null" class="tag">计划 {{ s.plan }}</span>
-        <span v-if="s.boarding === '有'" class="tag">可住宿</span>
+      <div class="right">
+        <div class="rank">位次 {{ s.school_rank }}</div>
+        <div class="muted">最低分 {{ s.min_score ?? '—' }}</div>
       </div>
     </div>
-    <div class="rank">
-      <div>录取位次 {{ s.school_rank }}</div>
-      <div class="muted">最低分 {{ s.min_score ?? '—' }}</div>
-    </div>
-  </div>
+  </el-card>
 </template>
+
+<style scoped>
+.school-card { cursor: pointer; }
+.school-card :deep(.el-card__body) { padding: 14px; }
+.row { display: flex; justify-content: space-between; gap: 8px; }
+.left { min-width: 0; flex: 1; }
+.name { font-weight: 600; font-size: 1rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.right { text-align: right; white-space: nowrap; }
+.rank { font-size: 0.9rem; color: #4a5057; }
+</style>
