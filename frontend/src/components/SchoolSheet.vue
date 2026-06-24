@@ -36,7 +36,9 @@ watch(
     error.value = ''
     channels.value = []
     try {
-      channels.value = await getSchool(code)
+      const all = await getSchool(code)
+      // 市内六区考生不能填报郊区招生线, 详情里也只展示可报的招生线
+      channels.value = all.filter((c) => c.scope !== 'suburb')
     } catch {
       error.value = '加载失败'
     } finally {

@@ -90,6 +90,14 @@ def test_recommend_scope_uses_right_rank(db):
                 assert x["student_rank"] == res["rank_whole"]
 
 
+def test_suburb_excluded(db):
+    # 市内六区考生不能填报郊区招生学校: 任何分数/模式下结果都不应含 suburb
+    for score in (720, 600, 450):
+        res = recommend(db, score, 2025)
+        for bucket in ("reach", "stable", "safe", "reachable"):
+            assert all(x["scope"] != "suburb" for x in res.get(bucket, []))
+
+
 def test_low_score_mode(db):
     # 低于最低档(500)的分数: 触发低分模式, 不分冲稳保, 给 reachable 列表
     res = recommend(db, 450, 2025)

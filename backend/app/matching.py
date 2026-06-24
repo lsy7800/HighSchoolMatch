@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from .models import (
     SCOPE_CITY6,
+    SCOPE_WHOLE,
     AppConfig,
     School,
     SchoolStat,
@@ -165,8 +166,17 @@ def _school_entry(s, stat, school_rank, student_rank) -> dict:
 
 
 def _iter_school_stats(db: Session, ref_year: int):
-    """逐校产出 (school, stat, school_rank), 跳过无数据/无位次的。"""
-    for s in db.query(School).all():
+    """逐校产出 (school, stat, school_rank), 跳过无数据/无位次的。
+
+    只面向市内六区考生: 仅可填报「市内六区招生」「全市招生」的学校,
+    「郊区招生」(SCOPE_SUBURB)学校市内六区考生不能填报, 直接排除。
+    """
+    schools = (
+        db.query(School)
+        .filter(School.scope.in_([SCOPE_CITY6, SCOPE_WHOLE]))
+        .all()
+    )
+    for s in schools:
         stat = (
             db.query(SchoolStat)
             .filter(SchoolStat.school_id == s.id, SchoolStat.year == ref_year)
