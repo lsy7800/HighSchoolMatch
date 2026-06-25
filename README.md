@@ -89,4 +89,31 @@ npm run dev          # http://localhost:5173 (dev 代理已转发 /api 到后端
 默认管理员账号 `admin` / `admin123`，**生产环境务必用环境变量覆盖**：
 `ADMIN_USERNAME`、`ADMIN_PASSWORD`、`JWT_SECRET`。
 
+## Docker 部署
+
+整个项目（前端 + 后端）用 docker compose 一键部署：后端 FastAPI + SQLite（数据卷持久化），前端 nginx 托管静态产物并反代 `/api`、`/health`。首次启动自动 seed 2025 数据，之后重启不会重复导入。
+
+```bash
+# 1. 准备环境变量（必填 ADMIN_PASSWORD / JWT_SECRET）
+cp .env.example .env
+vi .env
+
+# 2. 构建并启动
+docker compose up -d --build
+
+# 3. 查看状态 / 日志
+docker compose ps
+docker compose logs -f backend   # 首次会看到 seed 输出与 Validation OK
+
+# 4. 访问
+#    学生端   http://<服务器IP>:<HTTP_PORT>/
+#    管理后台 http://<服务器IP>:<HTTP_PORT>/admin
+```
+
+说明：
+- 默认对外端口 `80`，可用 `HTTP_PORT=8080` 改。
+- SQLite 数据持久化在命名卷 `backend-data`；删除数据需 `docker compose down -v`。
+- 前后端同源（nginx 反代），浏览器无需 CORS。
+- HTTPS / 域名：在前面再加一层反代（如 Caddy / Nginx + certbot）终结 TLS，再转发到 `HTTP_PORT` 即可。
+
 > 免责声明：本系统结果仅供参考，志愿填报请以官方招生政策与正式发布数据为准。
