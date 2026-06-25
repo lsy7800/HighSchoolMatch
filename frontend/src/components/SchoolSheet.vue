@@ -98,7 +98,7 @@ watch(
 </template>
 
 <style scoped>
-h4 { margin: 18px 0 8px; }
-.trend-row { display: flex; gap: 12px; flex-wrap: wrap; }
+h4 { margin: 20px 0 10px; font-size: 0.95rem; font-weight: 600; color: #4a5057; }
+.trend-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
 .trend-row > * { flex: 1; min-width: 220px; }
 </style>

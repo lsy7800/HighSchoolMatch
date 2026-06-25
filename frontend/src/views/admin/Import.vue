@@ -58,8 +58,8 @@ async function doCommit(kind) {
 </script>
 
 <template>
-  <h2>数据导入</h2>
-  <p class="muted">先「预览」核对解析结果，再「确认导入」。每年新数据到位后在此替换即可。</p>
+  <h2 class="admin-page-title">数据导入</h2>
+  <p class="admin-page-sub">先「预览」核对解析结果，再「确认导入」。每年新数据到位后在此替换即可。</p>
 
   <el-row :gutter="16">
     <el-col v-for="k in kinds" :key="k.key" :xs="24" :md="12">

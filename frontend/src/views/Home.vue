@@ -196,19 +196,19 @@ async function submit() {
 </template>
 
 <style scoped>
-.page { margin-top: -22px; }
-.query-box { max-width: 560px; margin: 0 auto; }
-.title { text-align: center; margin: 8px 0 4px; }
-.subtitle { text-align: center; color: var(--c-muted); margin: 0 0 16px; }
+.query-box { max-width: 520px; margin: 0 auto; }
 .help { margin-bottom: 16px; }
 .help p { margin: 6px 0; line-height: 1.6; font-size: 0.9rem; }
 .query-card, .rank-card { margin-bottom: 16px; }
-.rank-row { display: flex; gap: 40px; }
+.rank-row { display: flex; gap: 0; justify-content: space-around; }
 .disclaimer {
   font-size: 0.78rem;
   color: var(--c-muted);
   text-align: center;
-  margin-top: 28px;
-  line-height: 1.6;
+  margin-top: 32px;
+  line-height: 1.8;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>

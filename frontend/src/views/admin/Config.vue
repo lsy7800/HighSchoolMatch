@@ -31,8 +31,8 @@ async function save() {
 </script>
 
 <template>
-  <h2>阈值配置</h2>
-  <p class="muted">调整冲/稳/保的划分阈值，立即影响匹配结果。</p>
+  <h2 class="admin-page-title">阈值配置</h2>
+  <p class="admin-page-sub">调整冲/稳/保的划分阈值，立即影响匹配结果。</p>
 
   <el-card shadow="never" style="max-width:560px">
     <el-form label-position="top">

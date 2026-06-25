@@ -89,11 +89,11 @@ function scrollToScore() {
         :highlight-current-row="false"
         max-height="70vh"
       >
-        <el-table-column prop="score" label="分数" width="80" sortable />
-        <el-table-column prop="cum_whole" label="全市累计（位次）" />
-        <el-table-column prop="cum_city6" label="市内六区累计（位次）" />
-        <el-table-column prop="band_whole" label="全市该分人数" />
-        <el-table-column prop="band_city6" label="市内六区该分人数" />
+        <el-table-column prop="score" label="分数" width="80" sortable align="center" />
+        <el-table-column prop="cum_whole" label="全市累计（位次）" align="right" />
+        <el-table-column prop="cum_city6" label="市内六区累计（位次）" align="right" />
+        <el-table-column prop="band_whole" label="全市该分人数" align="right" />
+        <el-table-column prop="band_city6" label="市内六区该分人数" align="right" />
       </el-table>
     </div>
   </div>
@@ -101,6 +101,7 @@ function scrollToScore() {
 
 <style scoped>
 .rank-toolbar { display: flex; gap: 16px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-.rank-search { display: flex; gap: 6px; align-items: center; }
+.rank-search { display: flex; gap: 8px; align-items: center; }
+p.muted { margin: 0 0 12px; }
 :deep(.highlight-row) { background: var(--el-color-warning-light-8) !important; }
 </style>

@@ -40,11 +40,11 @@ const borderColor = { reach: 'var(--c-reach)', stable: 'var(--c-stable)', safe: 
 
 <style scoped>
 .school-card { cursor: pointer; }
-.school-card :deep(.el-card__body) { padding: 14px; }
-.row { display: flex; justify-content: space-between; gap: 8px; }
+.school-card :deep(.el-card__body) { padding: 16px; }
+.row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .left { min-width: 0; flex: 1; }
-.name { font-weight: 600; font-size: 1rem; }
+.name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.right { text-align: right; white-space: nowrap; }
-.rank { font-size: 0.9rem; color: #4a5057; }
+.right { text-align: right; white-space: nowrap; flex-shrink: 0; }
+.rank { font-size: 0.9rem; font-weight: 600; color: #4a5057; margin-bottom: 4px; }
 </style>

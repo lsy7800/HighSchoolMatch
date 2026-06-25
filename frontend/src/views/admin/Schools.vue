@@ -152,11 +152,11 @@ async function submitCreate() {
 
 <template>
   <div class="toolbar">
-    <h2 style="margin:0;flex:1">学校管理</h2>
+    <h2 class="admin-page-title" style="flex:1">学校管理</h2>
     <el-button type="primary" :icon="'Plus'" @click="openCreate">新增学校</el-button>
   </div>
 
-  <el-card shadow="never" style="margin:12px 0">
+  <el-card shadow="never" style="margin:16px 0">
     <div class="filters">
       <el-select v-model="scope" placeholder="招生口径" clearable style="width:140px" @change="load">
         <el-option v-for="s in scopeOpts" :key="s.v" :label="s.label" :value="s.v" />
