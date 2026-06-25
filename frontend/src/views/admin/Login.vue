@@ -45,7 +45,33 @@ async function login() {
 </template>
 
 <style scoped>
-.login-page { margin-top: 8vh; }
-.login-title { text-align: center; margin: 4px 0 16px; }
-.back { text-align: center; margin-top: 14px; }
+.login-page {
+  margin-top: 10vh;
+  display: flex;
+  justify-content: center;
+}
+.login-page :deep(.el-card) {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: var(--shadow-hover);
+}
+.login-page :deep(.el-card__body) { padding: 32px 28px 24px; }
+.login-title {
+  text-align: center;
+  margin: 0 0 24px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.login-title::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--el-color-primary), #6f7ff2);
+  box-shadow: 0 6px 14px rgba(58, 109, 240, 0.35);
+}
+.back { text-align: center; margin-top: 16px; }
 </style>

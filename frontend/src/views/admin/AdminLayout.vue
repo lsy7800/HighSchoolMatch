@@ -86,45 +86,58 @@ function logout() {
 <style scoped>
 .admin-shell { height: 100vh; }
 .admin-aside {
-  background: var(--el-bg-color);
-  border-right: 1px solid var(--el-border-color-light);
-  transition: width 0.25s;
+  background: #fff;
+  border-right: 1px solid var(--c-border);
+  transition: width 0.25s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 .aside-brand {
-  height: 56px;
+  height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--el-border-color-light);
+  padding: 0 14px;
+  border-bottom: 1px solid var(--c-border);
   font-weight: 700;
   gap: 4px;
   justify-content: space-between;
+  color: var(--el-color-primary);
 }
-.brand-text { font-size: 0.95rem; white-space: nowrap; overflow: hidden; }
+.brand-text { font-size: 0.98rem; white-space: nowrap; overflow: hidden; letter-spacing: 0.02em; }
 .brand-mini { font-size: 1.3rem; width: 100%; text-align: center; }
 .toggle-btn { font-size: 1.1rem; }
-.aside-menu { border-right: none; flex: 1; }
+.aside-menu { border-right: none; flex: 1; padding: 8px 8px; }
+.aside-menu :deep(.el-menu-item) {
+  border-radius: 8px;
+  margin: 2px 0;
+  height: 44px;
+  line-height: 44px;
+}
+.aside-menu :deep(.el-menu-item.is-active) {
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  font-weight: 600;
+}
 .admin-header {
   display: flex;
   align-items: center;
   gap: 10px;
   background: #fff;
-  border-bottom: 1px solid var(--el-border-color-light);
-  padding: 0 16px;
-  height: 56px;
+  border-bottom: 1px solid var(--c-border);
+  padding: 0 20px;
+  height: 60px;
 }
-.header-title { font-weight: 600; color: #4a5057; }
+.header-title { font-weight: 600; color: var(--c-text); font-size: 1.02rem; }
 .spacer { flex: 1; }
 .admin-main {
   background: var(--c-bg);
-  padding: 16px;
+  padding: 24px;
   overflow-y: auto;
 }
 @media (max-width: 767px) {
-  .admin-aside { position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; }
-  .aside-brand { height: 56px; }
+  .admin-aside { position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; box-shadow: var(--shadow-hover); }
+  .aside-brand { height: 60px; }
+  .admin-main { padding: 16px; }
 }
 </style>

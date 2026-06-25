@@ -196,19 +196,33 @@ async function submit() {
 </template>
 
 <style scoped>
-.query-box { max-width: 520px; margin: 0 auto; }
-.help { margin-bottom: 16px; }
-.help p { margin: 6px 0; line-height: 1.6; font-size: 0.9rem; }
-.query-card, .rank-card { margin-bottom: 16px; }
+.query-box { max-width: 540px; margin: -36px auto 0; position: relative; z-index: 10; }
+.help { margin-bottom: 14px; border-radius: 12px; overflow: hidden; }
+.help :deep(.el-collapse-item__header) {
+  font-size: 0.9rem;
+  padding: 12px 14px;
+}
+.help p { margin: 6px 0; padding: 0 12px; line-height: 1.65; font-size: 0.9rem; }
+.query-card, .rank-card {
+  margin-bottom: 16px;
+  border-radius: 14px;
+}
+.query-card :deep(.el-card__body) { padding: 22px 22px 18px; }
+.rank-card :deep(.el-card__body) { padding: 18px 22px; }
 .rank-row { display: flex; gap: 0; justify-content: space-around; }
+.rank-row :deep(.el-statistic__head) { color: var(--c-muted); font-size: 0.8rem; }
+.rank-row :deep(.el-statistic__number) { color: var(--el-color-primary); font-weight: 700; }
 .disclaimer {
   font-size: 0.78rem;
   color: var(--c-muted);
   text-align: center;
-  margin-top: 32px;
-  line-height: 1.8;
+  margin-top: 36px;
+  line-height: 1.85;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
 }
 </style>

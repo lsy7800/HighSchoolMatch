@@ -10,9 +10,9 @@ const borderColor = { reach: 'var(--c-reach)', stable: 'var(--c-stable)', safe: 
 
 <template>
   <el-card
-    shadow="hover"
+    shadow="never"
     class="school-card"
-    :style="{ borderLeft: `4px solid ${borderColor[type] || 'transparent'}` }"
+    :style="{ '--accent': borderColor[type] || 'transparent' }"
     @click="$emit('open')"
   >
     <div class="row">
@@ -39,12 +39,26 @@ const borderColor = { reach: 'var(--c-reach)', stable: 'var(--c-stable)', safe: 
 </template>
 
 <style scoped>
-.school-card { cursor: pointer; }
-.school-card :deep(.el-card__body) { padding: 16px; }
+.school-card {
+  cursor: pointer;
+  border-left: 4px solid var(--accent) !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.school-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.school-card :deep(.el-card__body) { padding: 16px 18px; }
 .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .left { min-width: 0; flex: 1; }
-.name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
-.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.name { font-weight: 600; font-size: 1.02rem; margin-bottom: 4px; color: var(--c-text); }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
 .right { text-align: right; white-space: nowrap; flex-shrink: 0; }
-.rank { font-size: 0.9rem; font-weight: 600; color: #4a5057; margin-bottom: 4px; }
+.rank {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.right .muted { font-size: 0.78rem; }
 </style>

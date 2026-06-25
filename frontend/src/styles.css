@@ -1,10 +1,37 @@
 /* 全局基础 + 语义色。组件样式交给 Element Plus。 */
+
 :root {
+  /* ---- 语义色（冲/稳/保） ---- */
   --c-reach: #e8743b;   /* 冲 橙 */
   --c-stable: #2e9e5b;  /* 稳 绿 */
   --c-safe: #2f6fb0;    /* 保 蓝 */
-  --c-bg: #f5f6f8;
+
+  /* ---- 中性色阶 ---- */
+  --c-bg: #f3f5f9;
+  --c-bg-soft: #ffffff;
+  --c-border: #e7e9ef;
   --c-muted: #8a909a;
+  --c-text: #1f2329;
+  --c-text-2: #4a5057;
+
+  /* ---- Element Plus 主色覆写：更沉静的蓝 ---- */
+  --el-color-primary: #3a6df0;
+  --el-color-primary-light-3: #6a90f4;
+  --el-color-primary-light-5: #9bb6f8;
+  --el-color-primary-light-7: #c5d4fb;
+  --el-color-primary-light-8: #dae3fc;
+  --el-color-primary-light-9: #eef2fe;
+  --el-color-primary-dark-2: #2c5bcc;
+
+  /* ---- 圆角 / 阴影 ---- */
+  --el-border-radius-base: 10px;
+  --el-border-radius-small: 8px;
+  --el-box-shadow: 0 1px 2px rgba(24, 34, 62, 0.04), 0 6px 20px rgba(24, 34, 62, 0.06);
+  --el-box-shadow-light: 0 1px 3px rgba(24, 34, 62, 0.05);
+
+  /* 自用阴影 */
+  --shadow-card: 0 1px 2px rgba(24, 34, 62, 0.04), 0 6px 18px rgba(24, 34, 62, 0.05);
+  --shadow-hover: 0 4px 12px rgba(24, 34, 62, 0.08), 0 12px 28px rgba(24, 34, 62, 0.08);
 }
 
 * { box-sizing: border-box; }
@@ -13,29 +40,43 @@ html, body {
   margin: 0;
   padding: 0;
   background: var(--c-bg);
-  color: #1f2329;
+  color: var(--c-text);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app { min-height: 100vh; }
 
-/* 内容容器: 响应式宽度 */
+/* 滚动条更细腻 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #cfd3dc; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #b6bbc7; background-clip: content-box; }
+
+/* ---- 内容容器：响应式宽度 ---- */
 .page {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 16px;
-  padding-bottom: 56px;
+  padding: 28px 20px 64px;
 }
 .page--narrow { max-width: 460px; }
 
 .muted { color: var(--c-muted); font-size: 0.85rem; margin: 0; }
 
-/* 学校列表: 移动单列, 桌面多列网格 */
+/* ---- 卡片统一样式（更柔和的边框 + 阴影） ---- */
+.el-card {
+  border-radius: 12px !important;
+  border-color: var(--c-border) !important;
+}
+.el-card.is-never-shadow { box-shadow: var(--shadow-card); }
+
+/* ---- 学校列表：移动单列，桌面多列网格 ---- */
 .school-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 @media (min-width: 640px) {
   .school-grid { grid-template-columns: repeat(2, 1fr); }
@@ -44,37 +85,59 @@ html, body {
   .school-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* 分组标题 */
+/* ---- 分组标题 ---- */
 .group-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 24px 0 12px;
-  font-size: 1.05rem;
+  margin: 28px 0 14px;
+  font-size: 1.08rem;
   font-weight: 600;
+  color: var(--c-text);
 }
+.group-title:first-child { margin-top: 8px; }
 
 /* ---- 页面 Hero 区域 ---- */
 .hero {
-  background: linear-gradient(135deg, var(--el-color-primary) 0%, #5b8def 100%);
+  position: relative;
+  background: linear-gradient(135deg, #3a6df0 0%, #5b8def 55%, #6f7ff2 100%);
   color: #fff;
   text-align: center;
-  padding: 48px 24px 52px;
+  padding: 54px 24px 58px;
+  overflow: hidden;
 }
-.hero-sm { padding: 32px 24px 36px; }
-.hero-inner { max-width: 720px; margin: 0 auto; }
-.hero h1 { margin: 0 0 12px; font-size: 1.8rem; font-weight: 700; letter-spacing: 0.01em; }
-.hero p { margin: 0; opacity: 0.9; font-size: 1rem; line-height: 1.7; }
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.16), transparent 45%),
+              radial-gradient(circle at 85% 30%, rgba(255,255,255,0.10), transparent 40%);
+  pointer-events: none;
+}
+.hero-sm { padding: 36px 24px 40px; }
+.hero-inner { max-width: 720px; margin: 0 auto; position: relative; }
+.hero h1 { margin: 0 0 12px; font-size: 1.85rem; font-weight: 700; letter-spacing: 0.01em; }
+.hero p { margin: 0; opacity: 0.92; font-size: 1rem; line-height: 1.75; }
 
-/* 管理页面内的标题节奏 */
+/* ---- 管理页面内的标题节奏 ---- */
 .admin-page-title {
   margin: 0 0 4px;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 600;
-  color: #1f2329;
+  color: var(--c-text);
 }
 .admin-page-sub {
   margin: 0 0 20px;
   color: var(--c-muted);
   font-size: 0.88rem;
+}
+
+/* ---- 按钮微调：更圆润、过渡更顺 ---- */
+.el-button { transition: all 0.18s ease; }
+
+/* ---- 表格头部更柔和 ---- */
+.el-table th.el-table__cell {
+  background: #f7f8fb !important;
+  font-weight: 600;
+  color: var(--c-text-2);
 }
