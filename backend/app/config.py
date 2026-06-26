@@ -3,8 +3,22 @@
 For production, set:
   ADMIN_USERNAME, ADMIN_PASSWORD, JWT_SECRET
   SILICONFLOW_API_KEY  (用于学校简介向量化检索)
+  DEEPSEEK_API_KEY     (用于智能问答 LLM)
+
+本地开发: 启动时自动加载仓库根目录的 .env(已存在的环境变量不被覆盖,
+所以 Docker 部署时 compose 注入的变量优先生效)。
 """
 import os
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+
+    # config.py 在 backend/app/, 仓库根 = 上溯三级
+    _repo_root = Path(__file__).resolve().parent.parent.parent
+    load_dotenv(_repo_root / ".env", override=False)
+except ImportError:
+    pass
 
 
 class Settings:
