@@ -12,6 +12,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -90,6 +91,18 @@ class SchoolStat(Base):
     rank_whole: Mapped[int | None] = mapped_column(Integer, nullable=True)    # 全市录取位次
 
     school: Mapped["School"] = relationship(back_populates="stats")
+
+
+class SchoolEmbedding(Base):
+    """学校简介的向量(用于语义检索)。一所学校一条, 按 doc_hash 增量更新。"""
+
+    __tablename__ = "school_embedding"
+
+    school_id: Mapped[int] = mapped_column(ForeignKey("school.id"), primary_key=True)
+    model: Mapped[str] = mapped_column(String)         # 生成该向量所用模型, 换模型需重建
+    dim: Mapped[int] = mapped_column(Integer)
+    doc_hash: Mapped[str] = mapped_column(String)      # 源文档 sha1, 用于跳过未变更项
+    vec: Mapped[bytes] = mapped_column(LargeBinary)    # float32 little-endian(array.tobytes)
 
 
 class AppConfig(Base):

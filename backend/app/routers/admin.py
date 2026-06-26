@@ -17,9 +17,10 @@ from fastapi import (
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from .. import matching
+from .. import matching, retrieval
 from ..auth import create_token, get_current_admin, verify_credentials
 from ..database import get_db
+from ..embedding import EmbeddingError
 from ..importers.schools_xlsx import import_schools, parse_schools
 from ..importers.score_rank_xlsx import import_score_rank, parse_score_rank
 from ..models import SCOPE_CITY6, SCOPE_SUBURB, SCOPE_WHOLE, AppConfig, School, SchoolStat, ScoreRank
@@ -411,6 +412,33 @@ def get_config(
 ):
     """当前阈值(DB 覆盖 + 默认值补齐)。"""
     return matching.get_config(db)
+
+
+# ---------------- 向量检索 ----------------
+@router.post("/embeddings/reindex")
+def reindex_embeddings(
+    db: Session = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    """重建学校向量索引(按 doc_hash 增量)。补全简介后调用。"""
+    try:
+        return retrieval.reindex(db)
+    except EmbeddingError as e:
+        raise HTTPException(400, str(e))
+
+
+@router.get("/embeddings/search")
+def search_embeddings(
+    q: str,
+    k: int = 10,
+    db: Session = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    """语义检索学校(调试用)。"""
+    try:
+        return retrieval.search(db, q, k)
+    except EmbeddingError as e:
+        raise HTTPException(400, str(e))
 
 
 @router.put("/config")
