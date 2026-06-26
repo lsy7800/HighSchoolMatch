@@ -1,8 +1,10 @@
-"""Admin API: login, xlsx import (preview/commit), CRUD, config.
+"""Admin API: login, xlsx import (preview/commit), CRUD, config, export.
 
 All routes except /login require a valid bearer token (get_current_admin).
 """
+import csv
 import io
+from datetime import datetime
 
 from fastapi import (
     APIRouter,
@@ -12,6 +14,7 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from .. import matching
@@ -32,6 +35,17 @@ from ..schemas import (
 )
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+SCOPE_LABEL = {SCOPE_CITY6: "市内六区", SCOPE_WHOLE: "全市", SCOPE_SUBURB: "郊区"}
+
+# 导出表头
+_SCHOOL_EXPORT_HEADERS = [
+    "代码", "招生口径", "名称", "性质", "归属区", "所在区", "招生区域",
+    "班型", "住宿", "食堂", "学费", "住宿费", "地址", "电话", "备注", "简介",
+]
+_STAT_EXPORT_HEADERS = [
+    "学校代码", "招生口径", "学校名称", "年份", "招生计划", "录取最低分", "市区位次", "全市位次",
+]
 
 
 # ---------------- 登录 ----------------
@@ -114,7 +128,7 @@ def _school_to_detail(s: School) -> SchoolDetail:
         home_district=s.home_district, location_district=s.location_district,
         recruit_area=s.recruit_area, boarding=s.boarding, canteen=s.canteen,
         class_types=s.class_types, fee=s.fee, dorm_fee=s.dorm_fee,
-        address=s.address, phone=s.phone, remark=s.remark,
+        address=s.address, phone=s.phone, remark=s.remark, intro=s.intro,
         stats=[
             YearStat(year=st.year, plan=st.plan, min_score=st.min_score,
                      rank_city6=st.rank_city6, rank_whole=st.rank_whole)
@@ -168,6 +182,80 @@ def list_schools(
         )
         for s in rows
     ]
+
+
+@router.get("/schools/export")
+def export_schools(
+    format: str = "xlsx",
+    scope: str | None = None,
+    q: str | None = None,
+    db: Session = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    """导出学校信息为 xlsx / csv。支持与列表相同的 scope / q 过滤。"""
+    fmt = (format or "").lower()
+    if fmt not in ("xlsx", "csv"):
+        raise HTTPException(400, "format 仅支持 xlsx / csv")
+
+    query = db.query(School)
+    if scope:
+        query = query.filter(School.scope == scope)
+    if q:
+        like = f"%{q}%"
+        query = query.filter((School.name.like(like)) | (School.code.like(like)))
+    schools = query.order_by(School.code).all()
+    stamp = datetime.now().strftime("%Y%m%d")
+
+    def _school_row(s: School):
+        return [
+            s.code, SCOPE_LABEL.get(s.scope, s.scope), s.name, s.type,
+            s.home_district, s.location_district, s.recruit_area,
+            s.class_types, s.boarding, s.canteen, s.fee, s.dorm_fee,
+            s.address, s.phone, s.remark, s.intro or "",
+        ]
+
+    if fmt == "csv":
+        buf = io.StringIO()
+        buf.write("﻿")  # UTF-8 BOM: 让 Excel 正确识别中文
+        w = csv.writer(buf)
+        w.writerow(_SCHOOL_EXPORT_HEADERS)
+        for s in schools:
+            w.writerow(_school_row(s))
+        data = buf.getvalue().encode("utf-8")
+        return Response(
+            content=data,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="schools_{stamp}.csv"'},
+        )
+
+    # xlsx: 学校信息 + 历年录取 两个 sheet
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "学校信息"
+    ws.append(_SCHOOL_EXPORT_HEADERS)
+    for s in schools:
+        ws.append(_school_row(s))
+    # 列宽稍微友好
+    ws.column_dimensions["P"].width = 40  # 简介列
+
+    ws2 = wb.create_sheet("历年录取")
+    ws2.append(_STAT_EXPORT_HEADERS)
+    for s in schools:
+        for st in sorted(s.stats, key=lambda x: x.year, reverse=True):
+            ws2.append([
+                s.code, SCOPE_LABEL.get(s.scope, s.scope), s.name, st.year,
+                st.plan, st.min_score, st.rank_city6, st.rank_whole,
+            ])
+
+    bio = io.BytesIO()
+    wb.save(bio)
+    return Response(
+        content=bio.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="schools_{stamp}.xlsx"'},
+    )
 
 
 @router.get("/schools/{school_id}", response_model=SchoolDetail)

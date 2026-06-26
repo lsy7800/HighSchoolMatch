@@ -13,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -67,6 +68,7 @@ class School(Base):
     address: Mapped[str | None] = mapped_column(String, nullable=True)
     phone: Mapped[str | None] = mapped_column(String, nullable=True)
     remark: Mapped[str | None] = mapped_column(String, nullable=True)
+    intro: Mapped[str | None] = mapped_column(Text, nullable=True)               # 学校简介(供补全/检索)
 
     stats: Mapped[list["SchoolStat"]] = relationship(
         back_populates="school", cascade="all, delete-orphan"

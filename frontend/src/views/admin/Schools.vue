@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   adminListSchools, adminGetSchool, adminCreateSchool, adminUpdateSchool,
-  adminDeleteSchool, adminUpsertStat, adminDeleteStat,
+  adminDeleteSchool, adminUpsertStat, adminDeleteStat, adminExportSchools,
 } from '../../api'
 
 const scopeOpts = [
@@ -35,6 +35,7 @@ function blankSchool() {
     code: '', scope: 'city6', name: '', type: '', location_district: '',
     home_district: '', recruit_area: '', boarding: '', canteen: '',
     class_types: '', fee: '', dorm_fee: '', address: '', phone: '', remark: '',
+    intro: '',
   }
 }
 function num(v) { return v === '' || v === null || v === undefined ? null : Number(v) }
@@ -62,6 +63,7 @@ async function saveStatic() {
     await adminUpdateSchool(editId.value, {
       name: e.name, type: e.type, location_district: e.location_district,
       address: e.address, phone: e.phone, class_types: e.class_types,
+      intro: e.intro,
     })
     ElMessage.success('已保存学校信息')
     load()
@@ -69,6 +71,26 @@ async function saveStatic() {
     ElMessage.error('保存失败')
   } finally {
     saving.value = false
+  }
+}
+
+async function doExport(format) {
+  try {
+    const blob = await adminExportSchools(format, {
+      scope: scope.value || undefined,
+      q: q.value || undefined,
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `schools.${format}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    ElMessage.success('已导出')
+  } catch {
+    ElMessage.error('导出失败')
   }
 }
 
@@ -153,6 +175,17 @@ async function submitCreate() {
 <template>
   <div class="toolbar">
     <h2 class="admin-page-title" style="flex:1">学校管理</h2>
+    <el-dropdown @command="doExport" style="margin-right:8px">
+      <el-button :icon="'Download'">
+        导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="xlsx">Excel (.xlsx)</el-dropdown-item>
+          <el-dropdown-item command="csv">CSV (.csv)</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     <el-button type="primary" :icon="'Plus'" @click="openCreate">新增学校</el-button>
   </div>
 
@@ -196,6 +229,7 @@ async function submitCreate() {
           <el-col :xs="24" :sm="12"><el-form-item label="电话"><el-input v-model="editing.phone" /></el-form-item></el-col>
           <el-col :xs="24"><el-form-item label="班型"><el-input v-model="editing.class_types" /></el-form-item></el-col>
           <el-col :xs="24"><el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="简介"><el-input v-model="editing.intro" type="textarea" :rows="4" placeholder="办学性质、校风/管理风格、特色方向、设施、升学口碑等（供检索与展示）" /></el-form-item></el-col>
         </el-row>
         <el-button type="primary" :loading="saving" @click="saveStatic">保存学校信息</el-button>
       </el-form>
@@ -237,6 +271,7 @@ async function submitCreate() {
       <el-form-item label="班型"><el-input v-model="newSchool.class_types" /></el-form-item>
       <el-form-item label="地址"><el-input v-model="newSchool.address" /></el-form-item>
       <el-form-item label="电话"><el-input v-model="newSchool.phone" /></el-form-item>
+      <el-form-item label="简介"><el-input v-model="newSchool.intro" type="textarea" :rows="4" placeholder="办学性质、校风/管理风格、特色方向、设施、升学口碑等" /></el-form-item>
       <el-alert title="创建后可在编辑页为其添加历年录取数据" type="info" :closable="false" />
     </el-form>
     <template #footer>

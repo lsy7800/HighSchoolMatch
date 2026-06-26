@@ -1,7 +1,7 @@
 """SQLite engine and session management."""
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # DB lives at backend/data/app.db (gitignored; created by seed script)
@@ -29,8 +29,18 @@ def get_db():
         db.close()
 
 
+def _ensure_schema(engine):
+    """轻量迁移: create_all 不会给已有表补列, 这里手动补齐新增列。"""
+    with engine.connect() as conn:
+        cols = {row[1] for row in conn.execute(text("PRAGMA table_info(school)"))}
+        if "intro" not in cols:
+            conn.execute(text("ALTER TABLE school ADD COLUMN intro TEXT"))
+            conn.commit()
+
+
 def init_db():
     """Create all tables. Import models first so they register on Base."""
     from . import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _ensure_schema(engine)

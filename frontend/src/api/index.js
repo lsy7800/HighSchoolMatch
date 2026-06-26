@@ -37,6 +37,10 @@ export const adminLogin = (username, password) => {
 export const adminMe = () => api.get('/admin/me').then((r) => r.data)
 export const adminListSchools = (params) =>
   api.get('/admin/schools', { params }).then((r) => r.data)
+export const adminExportSchools = (format, params) =>
+  api
+    .get('/admin/schools/export', { params: { format, ...params }, responseType: 'blob' })
+    .then((r) => r.data)
 export const adminGetSchool = (id) => api.get(`/admin/schools/${id}`).then((r) => r.data)
 export const adminCreateSchool = (payload) =>
   api.post('/admin/schools', payload).then((r) => r.data)

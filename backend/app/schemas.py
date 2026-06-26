@@ -64,6 +64,7 @@ class SchoolDetail(BaseModel):
     address: str | None = None
     phone: str | None = None
     remark: str | None = None
+    intro: str | None = None
     stats: list[YearStat]
 
 
@@ -93,6 +94,7 @@ class SchoolUpdate(BaseModel):
     address: str | None = None
     phone: str | None = None
     remark: str | None = None
+    intro: str | None = None
 
 
 class SchoolCreate(BaseModel):
@@ -116,6 +118,7 @@ class SchoolCreate(BaseModel):
     address: str | None = None
     phone: str | None = None
     remark: str | None = None
+    intro: str | None = None
 
 
 class StatUpsert(BaseModel):
