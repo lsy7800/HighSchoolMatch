@@ -36,10 +36,8 @@ async function send() {
   if (!text || sending.value) return
   input.value = ''
   messages.value.push({ role: 'user', content: text })
-  const assistant = {
-    role: 'assistant', content: '', thinking: '', tools: [], streaming: true,
-  }
-  messages.value.push(assistant)
+  messages.value.push({ role: 'assistant', content: '', thinking: '', tools: [], streaming: true })
+  const idx = messages.value.length - 1 // 通过此下标改属性才触发响应式(直接改原始对象不会)
   sending.value = true
   scroll()
 
@@ -50,29 +48,34 @@ async function send() {
     .map((m) => ({ role: m.role, content: m.content }))
 
   abortCtrl.value = new AbortController()
+  const patch = (fn) => fn(messages.value[idx]) // 始终经 proxy 修改
   try {
     await chatStream(
       text,
       history,
       (ev) => {
-        if (ev.type === 'thinking') assistant.thinking += ev.text
-        else if (ev.type === 'delta') { assistant.content += ev.text; scroll() }
-        else if (ev.type === 'tool') assistant.tools.push(ev.name)
-        else if (ev.type === 'done') assistant.streaming = false
-        else if (ev.type === 'error') {
-          assistant.content = (assistant.content ? assistant.content + '\n\n' : '') + '⚠️ ' + ev.message
-          assistant.streaming = false
-        }
+        patch((a) => {
+          if (ev.type === 'thinking') a.thinking += ev.text
+          else if (ev.type === 'delta') { a.content += ev.text; scroll() }
+          else if (ev.type === 'tool') a.tools.push(ev.name)
+          else if (ev.type === 'done') a.streaming = false
+          else if (ev.type === 'error') {
+            a.content = (a.content ? a.content + '\n\n' : '') + '⚠️ ' + ev.message
+            a.streaming = false
+          }
+        })
       },
       abortCtrl.value.signal,
     )
   } catch (e) {
-    if (e.name !== 'AbortError') {
-      assistant.content = (assistant.content ? assistant.content + '\n\n' : '') + '⚠️ 网络错误: ' + e.message
-    }
-    assistant.streaming = false
+    patch((a) => {
+      if (e.name !== 'AbortError') {
+        a.content = (a.content ? a.content + '\n\n' : '') + '⚠️ 网络错误: ' + e.message
+      }
+      a.streaming = false
+    })
   } finally {
-    assistant.streaming = false
+    patch((a) => { a.streaming = false })
     sending.value = false
     abortCtrl.value = null
     scroll()
