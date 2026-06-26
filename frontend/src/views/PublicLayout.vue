@@ -15,6 +15,7 @@ const route = useRoute()
         <nav class="nav">
           <router-link to="/" :class="{ active: route.name === 'home' }">志愿推荐</router-link>
           <router-link to="/score-rank" :class="{ active: route.name === 'score-rank' }">一分一段表</router-link>
+          <router-link to="/chat" :class="{ active: route.name === 'chat' }">智能问答</router-link>
           <router-link to="/admin" class="admin-link">管理后台</router-link>
         </nav>
       </div>

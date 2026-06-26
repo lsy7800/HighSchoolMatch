@@ -9,6 +9,10 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD 必填，请在 .env 中设置}
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET 必填，请在 .env 中设置}
       - JWT_EXPIRE_HOURS=${JWT_EXPIRE_HOURS:-12}
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY:?SILICONFLOW_API_KEY 必填(向量化检索)}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY 必填(智能问答)}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      - CHAT_RATE_PER_MIN=${CHAT_RATE_PER_MIN:-20}
     volumes:
       - backend-data:/app/backend/data
     restart: unless-stopped

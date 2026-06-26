@@ -13,6 +13,11 @@ const routes = [
         component: () => import('./views/ScoreRank.vue'),
         name: 'score-rank',
       },
+      {
+        path: 'chat',
+        component: () => import('./views/ChatView.vue'),
+        name: 'chat',
+      },
     ],
   },
   {

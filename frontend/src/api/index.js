@@ -35,6 +35,40 @@ export const adminLogin = (username, password) => {
   return api.post('/admin/login', form).then((r) => r.data)
 }
 export const adminMe = () => api.get('/admin/me').then((r) => r.data)
+
+// ---- 智能问答(SSE 流式, 用 fetch 直读流, 不走 axios) ----
+export async function chatStream(message, history, onEvent, signal) {
+  const resp = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history: history || [] }),
+    signal,
+  })
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '')
+    throw new Error(`HTTP ${resp.status} ${detail}`)
+  }
+  const reader = resp.body.getReader()
+  const decoder = new TextDecoder()
+  let buf = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+    let idx
+    while ((idx = buf.indexOf('\n\n')) >= 0) {
+      const raw = buf.slice(0, idx)
+      buf = buf.slice(idx + 2)
+      for (const line of raw.split('\n')) {
+        if (line.startsWith('data:')) {
+          try {
+            onEvent(JSON.parse(line.slice(5).trim()))
+          } catch { /* skip malformed */ }
+        }
+      }
+    }
+  }
+}
 export const adminListSchools = (params) =>
   api.get('/admin/schools', { params }).then((r) => r.data)
 export const adminExportSchools = (format, params) =>

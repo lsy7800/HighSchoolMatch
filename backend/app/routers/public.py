@@ -1,10 +1,12 @@
 """Public (student-facing) API routes."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
-from .. import matching
-from ..database import get_db
+from .. import chat, matching
+from ..database import SessionLocal, get_db
 from ..models import School, ScoreRank
 from ..schemas import RecommendRequest, RecommendResponse, SchoolDetail, YearStat
 
@@ -87,3 +89,40 @@ def school_detail(code: str, db: Session = Depends(get_db)):
             )
         )
     return out
+
+
+# ---------------- 智能问答 ----------------
+class ChatRequest(BaseModel):
+    message: str
+    history: list[dict] = []  # [{role: "user"|"assistant", content: "..."}]
+
+
+@router.post("/chat")
+def chat_endpoint(req: ChatRequest, request: Request):
+    """智能问答(SSE 流式)。无登录, 简单按 IP 限流。"""
+    ip = request.client.host if request.client else "unknown"
+    if not chat.check_rate(ip):
+        raise HTTPException(429, "提问太频繁，请稍后再试")
+
+    message = (req.message or "").strip()
+    if not message:
+        raise HTTPException(400, "消息不能为空")
+    if len(message) > 500:
+        raise HTTPException(400, "消息过长（上限 500 字）")
+
+    # 流式生成器自带 db session(独立于请求生命周期, 在生成器结束时关闭)
+    def gen():
+        db = SessionLocal()
+        try:
+            yield from chat.stream_chat(message, req.history, db)
+        finally:
+            db.close()
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # 让 nginx 不缓冲, SSE 实时下发
+        },
+    )
