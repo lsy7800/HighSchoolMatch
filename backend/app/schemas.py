@@ -53,17 +53,17 @@ class SchoolDetail(BaseModel):
     name: str
     scope: str
     type: str | None = None
-    home_district: str | None = None
     location_district: str | None = None
-    recruit_area: str | None = None
     boarding: str | None = None
     canteen: str | None = None
     class_types: str | None = None
+    subject_model: str | None = None
+    class_adjust: str | None = None
+    schedule: str | None = None
     fee: str | None = None
-    dorm_fee: str | None = None
-    address: str | None = None
-    phone: str | None = None
+    fee_reduction: str | None = None
     remark: str | None = None
+    other_info: str | None = None
     intro: str | None = None
     stats: list[YearStat]
 
@@ -83,17 +83,17 @@ class SchoolUpdate(BaseModel):
 
     name: str | None = None
     type: str | None = None
-    home_district: str | None = None
     location_district: str | None = None
-    recruit_area: str | None = None
     boarding: str | None = None
     canteen: str | None = None
     class_types: str | None = None
+    subject_model: str | None = None
+    class_adjust: str | None = None
+    schedule: str | None = None
     fee: str | None = None
-    dorm_fee: str | None = None
-    address: str | None = None
-    phone: str | None = None
+    fee_reduction: str | None = None
     remark: str | None = None
+    other_info: str | None = None
     intro: str | None = None
 
 
@@ -107,17 +107,17 @@ class SchoolCreate(BaseModel):
     scope: str  # city6 / whole / suburb
     name: str
     type: str | None = None
-    home_district: str | None = None
     location_district: str | None = None
-    recruit_area: str | None = None
     boarding: str | None = None
     canteen: str | None = None
     class_types: str | None = None
+    subject_model: str | None = None
+    class_adjust: str | None = None
+    schedule: str | None = None
     fee: str | None = None
-    dorm_fee: str | None = None
-    address: str | None = None
-    phone: str | None = None
+    fee_reduction: str | None = None
     remark: str | None = None
+    other_info: str | None = None
     intro: str | None = None
 
 

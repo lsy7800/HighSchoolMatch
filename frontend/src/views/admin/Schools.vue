@@ -33,9 +33,9 @@ const newSchool = ref(blankSchool())
 function blankSchool() {
   return {
     code: '', scope: 'city6', name: '', type: '', location_district: '',
-    home_district: '', recruit_area: '', boarding: '', canteen: '',
-    class_types: '', fee: '', dorm_fee: '', address: '', phone: '', remark: '',
-    intro: '',
+    boarding: '', canteen: '', class_types: '', subject_model: '',
+    class_adjust: '', schedule: '', fee: '', fee_reduction: '',
+    remark: '', other_info: '', intro: '',
   }
 }
 function num(v) { return v === '' || v === null || v === undefined ? null : Number(v) }
@@ -62,8 +62,10 @@ async function saveStatic() {
     const e = editing.value
     await adminUpdateSchool(editId.value, {
       name: e.name, type: e.type, location_district: e.location_district,
-      address: e.address, phone: e.phone, class_types: e.class_types,
-      intro: e.intro,
+      boarding: e.boarding, canteen: e.canteen, class_types: e.class_types,
+      subject_model: e.subject_model, class_adjust: e.class_adjust,
+      schedule: e.schedule, fee: e.fee, fee_reduction: e.fee_reduction,
+      remark: e.remark, other_info: e.other_info, intro: e.intro,
     })
     ElMessage.success('已保存学校信息')
     load()
@@ -224,12 +226,19 @@ async function submitCreate() {
       <el-form label-width="80px">
         <el-row :gutter="12">
           <el-col :xs="24" :sm="12"><el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="性质"><el-input v-model="editing.type" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="性质"><el-input v-model="editing.type" placeholder="公办 / 民办" /></el-form-item></el-col>
           <el-col :xs="24" :sm="12"><el-form-item label="所在区"><el-input v-model="editing.location_district" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="电话"><el-input v-model="editing.phone" /></el-form-item></el-col>
-          <el-col :xs="24"><el-form-item label="班型"><el-input v-model="editing.class_types" /></el-form-item></el-col>
-          <el-col :xs="24"><el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item></el-col>
-          <el-col :xs="24"><el-form-item label="简介"><el-input v-model="editing.intro" type="textarea" :rows="4" placeholder="办学性质、校风/管理风格、特色方向、设施、升学口碑等（供检索与展示）" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="住宿"><el-input v-model="editing.boarding" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="餐饮"><el-input v-model="editing.canteen" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="学费"><el-input v-model="editing.fee" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="学费减免"><el-input v-model="editing.fee_reduction" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="班型设置"><el-input v-model="editing.class_types" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="选科模式"><el-input v-model="editing.subject_model" type="textarea" :rows="2" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="调班机制"><el-input v-model="editing.class_adjust" type="textarea" :rows="2" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="作息"><el-input v-model="editing.schedule" type="textarea" :rows="2" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="备注"><el-input v-model="editing.remark" type="textarea" :rows="2" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="其他情况"><el-input v-model="editing.other_info" type="textarea" :rows="2" /></el-form-item></el-col>
+          <el-col :xs="24"><el-form-item label="简介"><el-input v-model="editing.intro" type="textarea" :rows="4" placeholder="办学性质、校风/管理风格、特色方向、设施、升学口碑等（供检索与展示，不从 xlsx 导入）" /></el-form-item></el-col>
         </el-row>
         <el-button type="primary" :loading="saving" @click="saveStatic">保存学校信息</el-button>
       </el-form>
@@ -268,10 +277,17 @@ async function submitCreate() {
       <el-form-item label="名称" required><el-input v-model="newSchool.name" /></el-form-item>
       <el-form-item label="性质"><el-input v-model="newSchool.type" placeholder="公办 / 民办" /></el-form-item>
       <el-form-item label="所在区"><el-input v-model="newSchool.location_district" /></el-form-item>
-      <el-form-item label="班型"><el-input v-model="newSchool.class_types" /></el-form-item>
-      <el-form-item label="地址"><el-input v-model="newSchool.address" /></el-form-item>
-      <el-form-item label="电话"><el-input v-model="newSchool.phone" /></el-form-item>
-      <el-form-item label="简介"><el-input v-model="newSchool.intro" type="textarea" :rows="4" placeholder="办学性质、校风/管理风格、特色方向、设施、升学口碑等" /></el-form-item>
+      <el-form-item label="住宿"><el-input v-model="newSchool.boarding" /></el-form-item>
+      <el-form-item label="餐饮"><el-input v-model="newSchool.canteen" /></el-form-item>
+      <el-form-item label="学费"><el-input v-model="newSchool.fee" /></el-form-item>
+      <el-form-item label="学费减免"><el-input v-model="newSchool.fee_reduction" /></el-form-item>
+      <el-form-item label="班型设置"><el-input v-model="newSchool.class_types" /></el-form-item>
+      <el-form-item label="选科模式"><el-input v-model="newSchool.subject_model" type="textarea" :rows="2" /></el-form-item>
+      <el-form-item label="调班机制"><el-input v-model="newSchool.class_adjust" type="textarea" :rows="2" /></el-form-item>
+      <el-form-item label="作息"><el-input v-model="newSchool.schedule" type="textarea" :rows="2" /></el-form-item>
+      <el-form-item label="备注"><el-input v-model="newSchool.remark" type="textarea" :rows="2" /></el-form-item>
+      <el-form-item label="其他情况"><el-input v-model="newSchool.other_info" type="textarea" :rows="2" /></el-form-item>
+      <el-form-item label="简介"><el-input v-model="newSchool.intro" type="textarea" :rows="4" placeholder="办学性质、校风/管理风格、特色方向、设施、升学口碑等（供检索与展示）" /></el-form-item>
       <el-alert title="创建后可在编辑页为其添加历年录取数据" type="info" :closable="false" />
     </el-form>
     <template #footer>

@@ -57,19 +57,19 @@ class School(Base):
     code: Mapped[str] = mapped_column(String, index=True)
     scope: Mapped[str] = mapped_column(String, index=True)  # SCOPE_*
     name: Mapped[str] = mapped_column(String, index=True)
-    home_district: Mapped[str | None] = mapped_column(String, nullable=True)      # 归属区
     location_district: Mapped[str | None] = mapped_column(String, nullable=True)  # 所在区
-    recruit_area: Mapped[str | None] = mapped_column(String, nullable=True)       # 招生区域
     type: Mapped[str | None] = mapped_column(String, nullable=True)               # 公办/民办
     boarding: Mapped[str | None] = mapped_column(String, nullable=True)           # 住宿
-    canteen: Mapped[str | None] = mapped_column(String, nullable=True)            # 食堂 (郊区表无)
-    class_types: Mapped[str | None] = mapped_column(String, nullable=True)        # 班型 (郊区表无)
+    canteen: Mapped[str | None] = mapped_column(String, nullable=True)            # 餐饮
+    class_types: Mapped[str | None] = mapped_column(String, nullable=True)        # 班型设置
+    subject_model: Mapped[str | None] = mapped_column(Text, nullable=True)        # 选科模式
+    class_adjust: Mapped[str | None] = mapped_column(Text, nullable=True)         # 调班机制
+    schedule: Mapped[str | None] = mapped_column(Text, nullable=True)             # 作息
     fee: Mapped[str | None] = mapped_column(String, nullable=True)                # 学费
-    dorm_fee: Mapped[str | None] = mapped_column(String, nullable=True)           # 住宿费
-    address: Mapped[str | None] = mapped_column(String, nullable=True)
-    phone: Mapped[str | None] = mapped_column(String, nullable=True)
-    remark: Mapped[str | None] = mapped_column(String, nullable=True)
-    intro: Mapped[str | None] = mapped_column(Text, nullable=True)               # 学校简介(供补全/检索)
+    fee_reduction: Mapped[str | None] = mapped_column(String, nullable=True)      # 学费减免
+    remark: Mapped[str | None] = mapped_column(String, nullable=True)             # 备注
+    other_info: Mapped[str | None] = mapped_column(Text, nullable=True)           # 其他情况
+    intro: Mapped[str | None] = mapped_column(Text, nullable=True)               # 学校简介(手动补全, 不从xlsx导入)
 
     stats: Mapped[list["SchoolStat"]] = relationship(
         back_populates="school", cascade="all, delete-orphan"

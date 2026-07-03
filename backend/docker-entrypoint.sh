@@ -6,7 +6,7 @@ DB_PATH=/app/backend/data/app.db
 
 if [ ! -f "$DB_PATH" ]; then
   echo "[entrypoint] 未发现现有数据库，开始首次 seed ..."
-  python -m scripts.seed_2025
+  python -m scripts.seed
   echo "[entrypoint] seed 完成。"
 else
   echo "[entrypoint] 数据库已存在，跳过 seed。"

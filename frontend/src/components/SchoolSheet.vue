@@ -60,17 +60,18 @@ watch(
         <el-descriptions :column="1" border size="small">
           <el-descriptions-item label="招生口径">{{ scopeLabel[s.scope] }}</el-descriptions-item>
           <el-descriptions-item label="性质">{{ s.type || '—' }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.home_district" label="归属区">{{ s.home_district }}</el-descriptions-item>
           <el-descriptions-item v-if="s.location_district" label="所在区">{{ s.location_district }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.recruit_area" label="招生区域">{{ s.recruit_area }}</el-descriptions-item>
           <el-descriptions-item label="住宿">{{ s.boarding || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="食堂">{{ s.canteen || '—' }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.class_types" label="班型">{{ s.class_types }}</el-descriptions-item>
+          <el-descriptions-item label="餐饮">{{ s.canteen || '—' }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.class_types" label="班型设置">{{ s.class_types }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.subject_model" label="选科模式">{{ s.subject_model }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.class_adjust" label="调班机制">{{ s.class_adjust }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.schedule" label="作息">{{ s.schedule }}</el-descriptions-item>
           <el-descriptions-item v-if="s.fee" label="学费">{{ s.fee }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.dorm_fee" label="住宿费">{{ s.dorm_fee }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.address" label="地址">{{ s.address }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.phone" label="电话">{{ s.phone }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.fee_reduction" label="学费减免">{{ s.fee_reduction }}</el-descriptions-item>
           <el-descriptions-item v-if="s.remark" label="备注">{{ s.remark }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.other_info" label="其他情况">{{ s.other_info }}</el-descriptions-item>
+          <el-descriptions-item v-if="s.intro" label="简介">{{ s.intro }}</el-descriptions-item>
         </el-descriptions>
 
         <h4>历年趋势</h4>

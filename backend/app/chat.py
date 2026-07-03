@@ -129,10 +129,10 @@ def _tool_get_school_detail(db: Session, args: dict) -> dict:
         out.append({
             "code": s.code, "name": s.name, "scope": SCOPE_LABEL.get(s.scope, s.scope),
             "type": s.type, "location_district": s.location_district,
-            "home_district": s.home_district, "recruit_area": s.recruit_area,
             "boarding": s.boarding, "canteen": s.canteen, "class_types": s.class_types,
-            "fee": s.fee, "dorm_fee": s.dorm_fee, "address": s.address,
-            "phone": s.phone, "remark": s.remark, "intro": s.intro,
+            "subject_model": s.subject_model, "class_adjust": s.class_adjust,
+            "schedule": s.schedule, "fee": s.fee, "fee_reduction": s.fee_reduction,
+            "remark": s.remark, "other_info": s.other_info, "intro": s.intro,
             "stats": [
                 {"year": st.year, "plan": st.plan, "min_score": st.min_score,
                  "rank_city6": st.rank_city6, "rank_whole": st.rank_whole}

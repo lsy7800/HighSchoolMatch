@@ -27,7 +27,7 @@
 ```
 backend/         FastAPI 后端
   app/           models / database / importers / routers / matching / auth
-  scripts/       seed_2025.py  一次性导入 2025 数据
+  scripts/       seed.py      一次性导入 一分档 + 高中数据
   data/          app.db (gitignored, 由 seed 生成)
 frontend/        Vue3 前端 (待建)
 data_source/     原始 PDF / xlsx 数据（参照）
@@ -40,7 +40,7 @@ data_source/     原始 PDF / xlsx 数据（参照）
 ```bash
 cd backend
 uv sync                          # 按 uv.lock 创建 .venv 并安装依赖(含开发依赖)
-uv run python -m scripts.seed_2025   # 建库 + 导入 2025 数据 + 校验
+uv run python -m scripts.seed        # 建库 + 导入 一分档 + 高中数据 + 校验
 uv run uvicorn app.main:app --reload # 启动后端 (http://127.0.0.1:8000)
 uv run pytest                    # 运行测试
 ```
@@ -53,10 +53,10 @@ uv run pytest                    # 运行测试
 python3 -m venv .venv
 .venv/bin/pip install -r backend/requirements.txt
 cd backend
-python -m scripts.seed_2025
+python -m scripts.seed
 ```
 
-校验通过应输出：一分档 281 档；学校 city6=81 / whole=48 / suburb=149，共 278 校。
+校验通过应输出：一分档 281 档；学校 city6=89 / whole=49，共 138 校。
 
 ## 进度
 
@@ -91,7 +91,7 @@ npm run dev          # http://localhost:5173 (dev 代理已转发 /api 到后端
 
 ## Docker 部署
 
-整个项目（前端 + 后端）用 docker compose 一键部署：后端 FastAPI + SQLite（数据卷持久化），前端 nginx 托管静态产物并反代 `/api`、`/health`。首次启动自动 seed 2025 数据，之后重启不会重复导入。
+整个项目（前端 + 后端）用 docker compose 一键部署：后端 FastAPI + SQLite（数据卷持久化），前端 nginx 托管静态产物并反代 `/api`、`/health`。首次启动自动 seed（一分档 + 高中数据），之后重启不会重复导入。
 
 ```bash
 # 1. 准备环境变量（必填 ADMIN_PASSWORD / JWT_SECRET）

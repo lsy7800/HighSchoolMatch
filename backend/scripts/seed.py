@@ -1,6 +1,6 @@
-"""One-shot seed: load 2025 一分档 + 高中数据 into a fresh SQLite DB.
+"""One-shot seed: load 一分档 + 高中数据 into a fresh SQLite DB.
 
-Run from backend/:  python -m scripts.seed_2025
+Run from backend/:  python -m scripts.seed
 """
 import sys
 from pathlib import Path
@@ -14,7 +14,7 @@ from app.importers.score_rank_xlsx import import_score_rank  # noqa: E402
 
 DATA = Path(__file__).resolve().parent.parent.parent / "data_source"
 SCORE_RANK_XLSX = DATA / "2025年一分档.xlsx"
-SCHOOLS_XLSX = DATA / "天津市高中数据汇总2025（分区）.xlsx"
+SCHOOLS_XLSX = DATA / "2026年天津高中信息调查表.xlsx"
 
 
 def main():
@@ -34,22 +34,24 @@ def main():
         )
 
         # --- validation ---
+        # 一分档精确校验(稳定); 学校数只做下限合理性校验(数据源可能增减几所,
+        # 且个别行若缺学校代码会被跳过——见导入器日志)。
         problems = []
         if sr.get(2025) != 281:
             problems.append(f"expected 281 score bands for 2025, got {sr.get(2025)}")
-        if sc["city6"] != 81:
-            problems.append(f"expected 81 city6 schools, got {sc['city6']}")
-        if sc["whole"] != 48:
-            problems.append(f"expected 48 whole schools, got {sc['whole']}")
-        if sc["suburb"] != 149:
-            problems.append(f"expected 149 suburb schools, got {sc['suburb']}")
+        if sc["schools_total"] < 100:
+            problems.append(f"expected >=100 schools, got {sc['schools_total']}")
+        if sc["city6"] < 80:
+            problems.append(f"expected >=80 city6 schools, got {sc['city6']}")
+        if sc["whole"] < 40:
+            problems.append(f"expected >=40 whole schools, got {sc['whole']}")
 
         if problems:
             print("\nVALIDATION FAILED:")
             for p in problems:
                 print("  -", p)
             sys.exit(1)
-        print("\nValidation OK — seed complete.")
+        print(f"\nValidation OK — seed complete. (city6={sc['city6']} whole={sc['whole']} total={sc['schools_total']})")
     finally:
         db.close()
 

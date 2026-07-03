@@ -19,7 +19,12 @@ _SCOPE_LABEL = {"city6": "市内六区", "whole": "全市", "suburb": "郊区"}
 
 
 def _school_doc(s: School) -> str:
-    """拼接用于向量化的文档。各字段以换行分隔, 空字段跳过。"""
+    """拼接用于向量化的文档。各字段以换行分隔, 空字段跳过。
+
+    以简介(intro)为语义主体——它是为检索而写的校风/特色摘要。
+    结构化长文本(作息/选科/调班)各校相似、会稀释 intro 信号, 不纳入向量,
+    需要时由 get_school_detail 工具按需取。
+    """
     parts = [s.name, s.type, s.location_district, s.class_types, s.intro]
     return "\n".join(p for p in parts if p)
 
@@ -58,6 +63,14 @@ def reindex(db: Session) -> dict:
     emb = Embedder.from_settings()
     schools = db.query(School).order_by(School.code).all()
     existing = {row.school_id: row for row in db.query(SchoolEmbedding).all()}
+
+    # 清理孤儿向量: school 已被 re-seed 删除/换 id 后, 旧 school_id 的向量无意义
+    current_ids = {s.id for s in schools}
+    orphan = [sid for sid in existing if sid not in current_ids]
+    if orphan:
+        db.query(SchoolEmbedding).filter(SchoolEmbedding.school_id.in_(orphan)).delete()
+        for sid in orphan:
+            existing.pop(sid, None)
 
     targets: list[tuple[School, str]] = []
     for s in schools:

@@ -75,10 +75,11 @@ def school_detail(code: str, db: Session = Depends(get_db)):
         out.append(
             SchoolDetail(
                 code=s.code, name=s.name, scope=s.scope, type=s.type,
-                home_district=s.home_district, location_district=s.location_district,
-                recruit_area=s.recruit_area, boarding=s.boarding, canteen=s.canteen,
-                class_types=s.class_types, fee=s.fee, dorm_fee=s.dorm_fee,
-                address=s.address, phone=s.phone, remark=s.remark,
+                location_district=s.location_district,
+                boarding=s.boarding, canteen=s.canteen, class_types=s.class_types,
+                subject_model=s.subject_model, class_adjust=s.class_adjust,
+                schedule=s.schedule, fee=s.fee, fee_reduction=s.fee_reduction,
+                remark=s.remark, other_info=s.other_info, intro=s.intro,
                 stats=[
                     YearStat(
                         year=st.year, plan=st.plan, min_score=st.min_score,

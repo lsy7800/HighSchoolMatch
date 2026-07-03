@@ -41,8 +41,9 @@ SCOPE_LABEL = {SCOPE_CITY6: "市内六区", SCOPE_WHOLE: "全市", SCOPE_SUBURB:
 
 # 导出表头
 _SCHOOL_EXPORT_HEADERS = [
-    "代码", "招生口径", "名称", "性质", "归属区", "所在区", "招生区域",
-    "班型", "住宿", "食堂", "学费", "住宿费", "地址", "电话", "备注", "简介",
+    "代码", "招生口径", "名称", "性质", "所在区",
+    "班型设置", "选科模式", "调班机制", "住宿", "餐饮", "作息",
+    "学费", "学费减免", "备注", "其他情况", "简介",
 ]
 _STAT_EXPORT_HEADERS = [
     "学校代码", "招生口径", "学校名称", "年份", "招生计划", "录取最低分", "市区位次", "全市位次",
@@ -126,10 +127,11 @@ def _school_to_detail(s: School) -> SchoolDetail:
     stats = sorted(s.stats, key=lambda x: x.year, reverse=True)
     return SchoolDetail(
         code=s.code, name=s.name, scope=s.scope, type=s.type,
-        home_district=s.home_district, location_district=s.location_district,
-        recruit_area=s.recruit_area, boarding=s.boarding, canteen=s.canteen,
-        class_types=s.class_types, fee=s.fee, dorm_fee=s.dorm_fee,
-        address=s.address, phone=s.phone, remark=s.remark, intro=s.intro,
+        location_district=s.location_district,
+        boarding=s.boarding, canteen=s.canteen, class_types=s.class_types,
+        subject_model=s.subject_model, class_adjust=s.class_adjust,
+        schedule=s.schedule, fee=s.fee, fee_reduction=s.fee_reduction,
+        remark=s.remark, other_info=s.other_info, intro=s.intro,
         stats=[
             YearStat(year=st.year, plan=st.plan, min_score=st.min_score,
                      rank_city6=st.rank_city6, rank_whole=st.rank_whole)
@@ -210,9 +212,9 @@ def export_schools(
     def _school_row(s: School):
         return [
             s.code, SCOPE_LABEL.get(s.scope, s.scope), s.name, s.type,
-            s.home_district, s.location_district, s.recruit_area,
-            s.class_types, s.boarding, s.canteen, s.fee, s.dorm_fee,
-            s.address, s.phone, s.remark, s.intro or "",
+            s.location_district, s.class_types, s.subject_model, s.class_adjust,
+            s.boarding, s.canteen, s.schedule, s.fee, s.fee_reduction,
+            s.remark, s.other_info, s.intro or "",
         ]
 
     if fmt == "csv":
