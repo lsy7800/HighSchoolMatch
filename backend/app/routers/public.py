@@ -1,13 +1,13 @@
 """Public (student-facing) API routes."""
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import distinct
+from sqlalchemy import distinct, func
 from sqlalchemy.orm import Session
 
 from .. import chat, matching
 from ..database import SessionLocal, get_db
-from ..models import School, ScoreRank
+from ..models import School, SchoolStat, ScoreRank
 from ..schemas import RecommendRequest, RecommendResponse, SchoolDetail, YearStat
 
 router = APIRouter(prefix="/api", tags=["public"])
@@ -60,6 +60,64 @@ def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
     result = matching.recommend(db, req.score, year, req.ref_year)
     if "error" in result:
         raise HTTPException(404, result["error"])
+    return result
+
+
+@router.get("/schools")
+def list_schools(
+    q: str | None = Query(None, description="名称/代码模糊搜索"),
+    scope: str | None = Query(None, description="city6/whole/suburb"),
+    type: str | None = Query(None, description="公办/民办"),
+    db: Session = Depends(get_db),
+):
+    """学校列表，含最新一年录取数据摘要，供公开浏览页使用。"""
+    qs = db.query(School)
+    if q:
+        like = f"%{q}%"
+        qs = qs.filter((School.name.like(like)) | (School.code.like(like)))
+    if scope:
+        qs = qs.filter(School.scope == scope)
+    if type:
+        qs = qs.filter(School.type == type)
+    schools = qs.order_by(School.code).all()
+
+    # 最新一年的 min_score / rank_city6 / rank_whole（子查询）
+    latest_year_sub = (
+        db.query(SchoolStat.school_id, func.max(SchoolStat.year).label("max_year"))
+        .group_by(SchoolStat.school_id)
+        .subquery()
+    )
+    stat_rows = (
+        db.query(SchoolStat)
+        .join(
+            latest_year_sub,
+            (SchoolStat.school_id == latest_year_sub.c.school_id)
+            & (SchoolStat.year == latest_year_sub.c.max_year),
+        )
+        .all()
+    )
+    stat_map = {st.school_id: st for st in stat_rows}
+
+    result = []
+    for s in schools:
+        st = stat_map.get(s.id)
+        result.append(
+            {
+                "code": s.code,
+                "name": s.name,
+                "scope": s.scope,
+                "type": s.type,
+                "location_district": s.location_district,
+                "boarding": s.boarding,
+                "canteen": s.canteen,
+                "class_types": s.class_types,
+                "intro": (s.intro or "")[:80] + ("…" if s.intro and len(s.intro) > 80 else ""),
+                "latest_year": st.year if st else None,
+                "latest_min_score": st.min_score if st else None,
+                "latest_rank_city6": st.rank_city6 if st else None,
+                "latest_rank_whole": st.rank_whole if st else None,
+            }
+        )
     return result
 
 
