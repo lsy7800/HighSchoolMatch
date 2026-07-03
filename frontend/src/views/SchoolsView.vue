@@ -97,58 +97,43 @@ function rankLabel(s) {
       </div>
     </el-card>
 
-    <!-- 学校卡片列表 -->
-    <div v-loading="loading" class="card-grid">
+    <!-- 学校列表 -->
+    <div v-loading="loading" class="school-list">
       <div
         v-for="s in list"
         :key="s.code + s.scope"
-        class="school-card"
+        class="school-row"
+        @click="openDetail(s.code)"
       >
-        <!-- 标题行 -->
-        <div class="card-head">
-          <button class="school-name" @click="openDetail(s.code)">{{ s.name }}</button>
-          <el-tag :type="scopeTagType[s.scope]" size="small" class="scope-tag">
-            {{ scopeLabel[s.scope] }}
-          </el-tag>
+        <div class="row-main">
+          <div class="row-name-line">
+            <span class="school-name">{{ s.name }}</span>
+            <el-tag :type="scopeTagType[s.scope]" size="small">{{ scopeLabel[s.scope] }}</el-tag>
+          </div>
+          <div class="row-meta">
+            <span v-if="s.type" class="meta-item">{{ s.type }}</span>
+            <span v-if="s.location_district" class="meta-item">{{ s.location_district }}</span>
+            <span v-if="s.boarding" class="meta-item">{{ s.boarding }}</span>
+            <span v-if="s.class_types" class="meta-item meta-classtypes">{{ s.class_types }}</span>
+          </div>
+          <p v-if="s.intro" class="row-intro">{{ s.intro }}</p>
         </div>
 
-        <!-- 基本信息标签 -->
-        <div class="card-tags">
-          <span v-if="s.type" class="info-tag">{{ s.type }}</span>
-          <span v-if="s.location_district" class="info-tag">{{ s.location_district }}</span>
-          <span v-if="s.boarding" class="info-tag">{{ s.boarding }}</span>
-          <span v-if="s.class_types" class="info-tag class-types">{{ s.class_types }}</span>
-        </div>
-
-        <!-- 简介 -->
-        <p v-if="s.intro" class="card-intro">{{ s.intro }}</p>
-
-        <!-- 最新录取数据 -->
-        <div v-if="s.latest_min_score || rankDisplay(s)" class="card-stats">
-          <div v-if="s.latest_year" class="stat-year">{{ s.latest_year }} 年录取</div>
-          <div class="stat-items">
-            <div v-if="s.latest_min_score" class="stat-item">
-              <span class="stat-value">{{ s.latest_min_score }}</span>
-              <span class="stat-label">最低分</span>
-            </div>
-            <div v-if="rankDisplay(s)" class="stat-item">
-              <span class="stat-value">{{ rankDisplay(s).toLocaleString() }}</span>
-              <span class="stat-label">{{ rankLabel(s) }}</span>
-            </div>
+        <div class="row-stats" v-if="s.latest_min_score || rankDisplay(s)">
+          <div v-if="s.latest_min_score" class="stat-col">
+            <span class="stat-val">{{ s.latest_min_score }}</span>
+            <span class="stat-lbl">{{ s.latest_year }}年最低分</span>
+          </div>
+          <div v-if="rankDisplay(s)" class="stat-col">
+            <span class="stat-val">{{ rankDisplay(s).toLocaleString() }}</span>
+            <span class="stat-lbl">{{ rankLabel(s) }}</span>
           </div>
         </div>
 
-        <div class="card-footer">
-          <el-button link type="primary" size="small" @click="openDetail(s.code)">
-            查看详情 →
-          </el-button>
-        </div>
+        <el-icon class="row-arrow"><ArrowRight /></el-icon>
       </div>
 
-      <!-- 空状态 -->
-      <div v-if="!loading && list.length === 0" class="empty-state">
-        <el-empty description="没有匹配的学校" />
-      </div>
+      <el-empty v-if="!loading && list.length === 0" description="没有匹配的学校" style="padding:60px 0" />
     </div>
   </div>
 
@@ -158,7 +143,7 @@ function rankLabel(s) {
 
 <style scoped>
 .schools-page {
-  max-width: 1100px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 32px 20px 60px;
 }
@@ -172,7 +157,7 @@ function rankLabel(s) {
 }
 .page-desc { color: var(--c-text-2); font-size: 0.92rem; margin: 0; }
 
-.search-card { margin-bottom: 24px; }
+.search-card { margin-bottom: 20px; }
 .search-row {
   display: flex;
   flex-wrap: wrap;
@@ -180,127 +165,114 @@ function rankLabel(s) {
   align-items: center;
 }
 
-/* 卡片网格 */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-  min-height: 200px;
-}
-
-.school-card {
+/* 列表 */
+.school-list {
   background: #fff;
   border: 1px solid var(--c-border);
   border-radius: 12px;
-  padding: 18px 20px 14px;
+  overflow: hidden;
+  min-height: 120px;
+}
+
+.school-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--c-border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.school-row:last-child { border-bottom: none; }
+.school-row:hover { background: var(--el-color-primary-light-9); }
+
+.row-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: box-shadow 0.18s, border-color 0.18s;
-}
-.school-card:hover {
-  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
-  border-color: var(--el-color-primary-light-5);
-}
-
-.card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-.school-name {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--el-color-primary);
-  cursor: pointer;
-  text-align: left;
-  line-height: 1.4;
-  flex: 1;
-}
-.school-name:hover { text-decoration: underline; }
-.scope-tag { flex-shrink: 0; }
-
-.card-tags {
-  display: flex;
-  flex-wrap: wrap;
   gap: 5px;
 }
-.info-tag {
-  font-size: 0.78rem;
+
+.row-name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.school-name {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--el-color-primary);
+  line-height: 1.3;
+}
+.school-row:hover .school-name { text-decoration: underline; }
+
+.row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.meta-item {
+  font-size: 0.76rem;
   color: var(--c-text-2);
   background: var(--c-bg);
   border: 1px solid var(--c-border);
-  border-radius: 5px;
-  padding: 1px 7px;
+  border-radius: 4px;
+  padding: 1px 6px;
   white-space: nowrap;
 }
-.class-types {
-  max-width: 100%;
+.meta-classtypes {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-intro {
+  font-size: 0.81rem;
+  color: var(--c-text-2);
+  line-height: 1.5;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.card-intro {
-  font-size: 0.83rem;
-  color: var(--c-text-2);
-  line-height: 1.55;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 录取数据摘要 */
-.card-stats {
-  background: var(--c-bg);
-  border-radius: 8px;
-  padding: 10px 14px;
-}
-.stat-year {
-  font-size: 0.75rem;
-  color: var(--c-text-2);
-  margin-bottom: 6px;
-}
-.stat-items {
+/* 右侧数据列 */
+.row-stats {
   display: flex;
   gap: 24px;
+  flex-shrink: 0;
+  text-align: right;
 }
-.stat-item {
+.stat-col {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 2px;
 }
-.stat-value {
-  font-size: 1.1rem;
+.stat-val {
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--c-text);
   line-height: 1;
 }
-.stat-label {
-  font-size: 0.72rem;
+.stat-lbl {
+  font-size: 0.7rem;
   color: var(--c-text-2);
+  white-space: nowrap;
 }
 
-.card-footer {
-  margin-top: auto;
-  padding-top: 2px;
+.row-arrow {
+  color: var(--c-text-2);
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.5;
 }
 
-.empty-state {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  padding: 60px 0;
-}
-
-@media (max-width: 480px) {
-  .schools-page { padding: 20px 14px 48px; }
-  .card-grid { grid-template-columns: 1fr; }
+@media (max-width: 600px) {
+  .schools-page { padding: 20px 12px 48px; }
+  .row-stats { display: none; }
+  .school-row { padding: 14px 16px; }
 }
 </style>
