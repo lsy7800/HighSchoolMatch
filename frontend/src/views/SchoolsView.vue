@@ -47,32 +47,6 @@ function onClear() {
   type.value = ''
   load()
 }
-
-// 按 / 或 、 拆分班型
-function splitClassTypes(str) {
-  if (!str) return []
-  return str.split(/[/、，,]/).map((s) => s.trim()).filter(Boolean)
-}
-
-// 按关键词匹配班型颜色
-const CLASS_COLORS = [
-  { keys: ['普通'], bg: '#f4f4f5', text: '#909399', border: '#e9e9eb' },
-  { keys: ['实验'], bg: '#ecf5ff', text: '#409eff', border: '#d9ecff' },
-  { keys: ['体育'], bg: '#fdf6ec', text: '#e6a23c', border: '#faecd8' },
-  { keys: ['艺术', '音乐', '美术', '舞蹈'], bg: '#fdf2f8', text: '#c026d3', border: '#f0abfc' },
-  { keys: ['国际'], bg: '#eef2ff', text: '#6366f1', border: '#c7d2fe' },
-  { keys: ['理工', '创新', '科技', '科创'], bg: '#ecfeff', text: '#0891b2', border: '#a5f3fc' },
-  { keys: ['文理', '文科', '人文'], bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' },
-  { keys: ['航', '强基', '竞赛'], bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' },
-]
-const CLASS_DEFAULT = { bg: '#f4f4f5', text: '#606266', border: '#e9e9eb' }
-
-function classTypeStyle(cls) {
-  for (const rule of CLASS_COLORS) {
-    if (rule.keys.some((k) => cls.includes(k))) return rule
-  }
-  return CLASS_DEFAULT
-}
 </script>
 
 <template>
@@ -158,25 +132,6 @@ function classTypeStyle(cls) {
           <span v-else class="empty-val">—</span>
         </template>
       </el-table-column>
-
-      <!-- 班型设置 -->
-      <el-table-column label="班型设置" min-width="200">
-        <template #default="{ row }">
-          <div class="class-tags">
-            <span
-              v-for="cls in splitClassTypes(row.class_types)"
-              :key="cls"
-              class="class-tag"
-              :style="{
-                background: classTypeStyle(cls).bg,
-                color: classTypeStyle(cls).text,
-                borderColor: classTypeStyle(cls).border,
-              }"
-            >{{ cls }}</span>
-            <span v-if="!row.class_types" class="empty-val">—</span>
-          </div>
-        </template>
-      </el-table-column>
     </el-table>
 
     <el-empty v-if="!loading && list.length === 0" description="没有匹配的学校" style="padding:60px 0" />
@@ -215,22 +170,6 @@ function classTypeStyle(cls) {
 .score-val { font-weight: 600; color: var(--c-text); }
 .rank-val { color: var(--c-text-2); }
 .empty-val { color: #c0c4cc; }
-
-.class-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 2px 0;
-}
-.class-tag {
-  display: inline-block;
-  font-size: 0.72rem;
-  padding: 1px 7px;
-  border-radius: 4px;
-  border: 1px solid;
-  white-space: nowrap;
-  line-height: 1.6;
-}
 
 @media (max-width: 768px) {
   .schools-page { padding: 20px 12px 48px; }

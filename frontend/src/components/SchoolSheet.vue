@@ -15,10 +15,11 @@ const visible = computed({
 })
 
 const loading = ref(false)
-const channels = ref([]) // 一个 code 可能有多条招生线
+const channels = ref([])
 const error = ref('')
 
 const scopeLabel = { city6: '市内六区', whole: '全市', suburb: '郊区' }
+const scopeTagType = { city6: 'primary', whole: 'success', suburb: 'warning' }
 
 function rankPoints(s) {
   const key = s.scope === 'city6' ? 'rank_city6' : 'rank_whole'
@@ -37,7 +38,6 @@ watch(
     channels.value = []
     try {
       const all = await getSchool(code)
-      // 市内六区考生不能填报郊区招生线, 详情里也只展示可报的招生线
       channels.value = all.filter((c) => c.scope !== 'suburb')
     } catch {
       error.value = '加载失败'
@@ -47,59 +47,265 @@ watch(
   },
   { immediate: true }
 )
+
+// 班型拆分 + 颜色映射（鲜亮配色）
+function splitClassTypes(str) {
+  if (!str) return []
+  return str.split(/[/、，,]/).map((s) => s.trim()).filter(Boolean)
+}
+
+const CLASS_COLORS = [
+  { keys: ['普通'], bg: 'linear-gradient(135deg,#f1f5f9,#e2e8f0)', text: '#475569' },
+  { keys: ['实验'], bg: 'linear-gradient(135deg,#dbeafe,#bfdbfe)', text: '#1d4ed8' },
+  { keys: ['体育'], bg: 'linear-gradient(135deg,#fef3c7,#fde68a)', text: '#b45309' },
+  { keys: ['艺术', '音乐', '美术', '舞蹈'], bg: 'linear-gradient(135deg,#fbcfe8,#f9a8d4)', text: '#be185d' },
+  { keys: ['国际'], bg: 'linear-gradient(135deg,#e0e7ff,#c7d2fe)', text: '#4338ca' },
+  { keys: ['理工', '创新', '科技', '科创'], bg: 'linear-gradient(135deg,#cffafe,#a5f3fc)', text: '#0e7490' },
+  { keys: ['文理', '文科', '人文'], bg: 'linear-gradient(135deg,#dcfce7,#bbf7d0)', text: '#15803d' },
+  { keys: ['航', '强基', '竞赛'], bg: 'linear-gradient(135deg,#fed7aa,#fdba74)', text: '#9a3412' },
+]
+const CLASS_DEFAULT = { bg: 'linear-gradient(135deg,#f1f5f9,#e2e8f0)', text: '#475569' }
+
+function classTypeStyle(cls) {
+  for (const rule of CLASS_COLORS) {
+    if (rule.keys.some((k) => cls.includes(k))) return rule
+  }
+  return CLASS_DEFAULT
+}
+
+function fmt(v) {
+  if (v === null || v === undefined || v === '') return '—'
+  return v
+}
 </script>
 
 <template>
-  <el-dialog v-model="visible" width="min(720px, 94vw)" top="6vh" :title="channels[0]?.name || '学校详情'">
-    <div v-if="loading" v-loading="true" style="min-height:120px"></div>
+  <el-dialog v-model="visible" width="min(780px, 95vw)" top="5vh" :show-close="true" class="school-detail-dialog">
+    <template #header>
+      <div class="dialog-header">
+        <el-icon class="dialog-icon"><School /></el-icon>
+        <span class="dialog-title">{{ channels[0]?.name || '学校详情' }}</span>
+      </div>
+    </template>
+
+    <div v-if="loading" v-loading="true" style="min-height:200px"></div>
     <el-alert v-else-if="error" :title="error" type="error" :closable="false" />
 
     <template v-else>
-      <div v-for="(s, i) in channels" :key="i" :style="i ? 'margin-top:24px' : ''">
+      <div v-for="(s, i) in channels" :key="i">
         <el-divider v-if="i" />
-        <el-descriptions :column="1" border size="small">
-          <el-descriptions-item label="招生口径">{{ scopeLabel[s.scope] }}</el-descriptions-item>
-          <el-descriptions-item label="性质">{{ s.type || '—' }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.location_district" label="所在区">{{ s.location_district }}</el-descriptions-item>
-          <el-descriptions-item label="住宿">{{ s.boarding || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="餐饮">{{ s.canteen || '—' }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.class_types" label="班型设置">{{ s.class_types }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.subject_model" label="选科模式">{{ s.subject_model }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.class_adjust" label="调班机制">{{ s.class_adjust }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.schedule" label="作息">{{ s.schedule }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.fee" label="学费">{{ s.fee }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.fee_reduction" label="学费减免">{{ s.fee_reduction }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.remark" label="备注">{{ s.remark }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.other_info" label="其他情况">{{ s.other_info }}</el-descriptions-item>
-          <el-descriptions-item v-if="s.intro" label="简介">{{ s.intro }}</el-descriptions-item>
-        </el-descriptions>
 
-        <h4>历年趋势</h4>
-        <div class="trend-row">
-          <TrendChart
-            :points="rankPoints(s)"
-            :invert="true"
-            color="#3b6fe0"
-            :label="(s.scope === 'city6' ? '市区' : '全市') + '录取位次（越低越好）'"
-          />
-          <TrendChart :points="scorePoints(s)" color="#2e9e5b" label="录取最低分" />
+        <!-- 招生口径标签条 -->
+        <div class="scope-bar">
+          <el-tag :type="scopeTagType[s.scope]" effect="dark" round>{{ scopeLabel[s.scope] }} 招生</el-tag>
+          <span v-if="s.type" class="type-chip">{{ s.type }}</span>
+          <span v-if="s.location_district" class="meta-dot">{{ s.location_district }}</span>
         </div>
 
-        <h4>历年录取</h4>
-        <el-table :data="s.stats" size="small" border>
-          <el-table-column prop="year" label="年份" width="70" />
-          <el-table-column prop="plan" label="计划" />
-          <el-table-column prop="min_score" label="最低分" />
-          <el-table-column v-if="s.scope === 'city6'" prop="rank_city6" label="市区位次" />
-          <el-table-column prop="rank_whole" label="全市位次" />
-        </el-table>
+        <!-- 班型设置（彩色 tag） -->
+        <div v-if="s.class_types" class="class-section">
+          <div class="section-label">班型设置</div>
+          <div class="class-tags">
+            <span
+              v-for="cls in splitClassTypes(s.class_types)"
+              :key="cls"
+              class="class-tag"
+              :style="{ background: classTypeStyle(cls).bg, color: classTypeStyle(cls).text }"
+            >{{ cls }}</span>
+          </div>
+        </div>
+
+        <!-- 基本信息 -->
+        <div class="info-grid">
+          <div class="info-cell"><span class="info-key">住宿</span><span class="info-val">{{ fmt(s.boarding) }}</span></div>
+          <div class="info-cell"><span class="info-key">餐饮</span><span class="info-val">{{ fmt(s.canteen) }}</span></div>
+          <div class="info-cell"><span class="info-key">学费</span><span class="info-val">{{ fmt(s.fee) }}</span></div>
+          <div class="info-cell"><span class="info-key">学费减免</span><span class="info-val">{{ fmt(s.fee_reduction) }}</span></div>
+          <div v-if="s.subject_model" class="info-cell info-wide"><span class="info-key">选科模式</span><span class="info-val">{{ s.subject_model }}</span></div>
+          <div v-if="s.class_adjust" class="info-cell info-wide"><span class="info-key">调班机制</span><span class="info-val">{{ s.class_adjust }}</span></div>
+          <div v-if="s.schedule" class="info-cell info-wide"><span class="info-key">作息</span><span class="info-val">{{ s.schedule }}</span></div>
+        </div>
+
+        <!-- 简介 -->
+        <div v-if="s.intro" class="intro-block">
+          <div class="section-label">学校简介</div>
+          <p class="intro-text">{{ s.intro }}</p>
+        </div>
+
+        <div v-if="s.remark || s.other_info" class="extra-block">
+          <div v-if="s.remark" class="extra-row"><span class="extra-key">备注</span><span class="extra-val">{{ s.remark }}</span></div>
+          <div v-if="s.other_info" class="extra-row"><span class="extra-key">其他</span><span class="extra-val">{{ s.other_info }}</span></div>
+        </div>
+
+        <!-- 历年趋势 -->
+        <div class="trend-section">
+          <div class="section-label">历年趋势</div>
+          <div class="trend-row">
+            <TrendChart
+              :points="rankPoints(s)"
+              :invert="true"
+              color="#3b6fe0"
+              :label="(s.scope === 'city6' ? '市区' : '全市') + '录取位次（越低越好）'"
+            />
+            <TrendChart :points="scorePoints(s)" color="#2e9e5b" label="录取最低分" />
+          </div>
+        </div>
+
+        <!-- 历年录取 -->
+        <div class="stats-section">
+          <div class="section-label">历年录取</div>
+          <el-table :data="s.stats" size="small" border>
+            <el-table-column prop="year" label="年份" width="70" align="center" />
+            <el-table-column prop="plan" label="计划" align="center" />
+            <el-table-column prop="min_score" label="最低分" align="center" />
+            <el-table-column v-if="s.scope === 'city6'" prop="rank_city6" label="市区位次" align="center" />
+            <el-table-column prop="rank_whole" label="全市位次" align="center" />
+          </el-table>
+        </div>
       </div>
     </template>
   </el-dialog>
 </template>
 
 <style scoped>
-h4 { margin: 20px 0 10px; font-size: 0.95rem; font-weight: 600; color: #4a5057; }
-.trend-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dialog-icon {
+  font-size: 1.2rem;
+  color: var(--el-color-primary);
+}
+.dialog-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* 招生口径条 */
+.scope-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--c-border);
+}
+.type-chip {
+  font-size: 0.78rem;
+  color: var(--c-text-2);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.meta-dot { font-size: 0.8rem; color: var(--c-text-2); }
+.meta-dot::before { content: '· '; }
+
+/* 通用 section 标题 */
+.section-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--c-text-2);
+  margin-bottom: 8px;
+  padding-left: 8px;
+  border-left: 3px solid var(--el-color-primary);
+  line-height: 1.2;
+}
+
+/* 班型彩色 tag */
+.class-section { margin-bottom: 16px; }
+.class-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.class-tag {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 14px;
+  line-height: 1.6;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* 基本信息 grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--c-border);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.info-cell {
+  background: #fff;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.info-wide { grid-column: span 4; }
+.info-key {
+  font-size: 0.72rem;
+  color: var(--c-text-2);
+}
+.info-val {
+  font-size: 0.88rem;
+  color: var(--c-text);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* 简介 */
+.intro-block { margin-bottom: 16px; }
+.intro-text {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--c-text);
+  line-height: 1.7;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 8px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--el-color-primary);
+}
+
+/* 备注/其他 */
+.extra-block {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+.extra-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.extra-row + .extra-row { margin-top: 4px; }
+.extra-key {
+  flex-shrink: 0;
+  color: #b45309;
+  font-weight: 600;
+}
+.extra-val { color: #78350f; }
+
+/* 趋势 */
+.trend-section { margin-bottom: 18px; }
+.trend-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 .trend-row > * { flex: 1; min-width: 220px; }
+
+/* 录取表 */
+.stats-section { margin-top: 4px; }
+
+@media (max-width: 600px) {
+  .info-grid { grid-template-columns: repeat(2, 1fr); }
+  .info-wide { grid-column: span 2; }
+}
 </style>
