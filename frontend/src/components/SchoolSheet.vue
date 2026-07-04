@@ -77,6 +77,27 @@ function fmt(v) {
   if (v === null || v === undefined || v === '') return '—'
   return v
 }
+
+// 与上一年(更早的年份)对比的增减趋势。
+// stats 按年份降序排列, 故上一行 = 索引+1。
+// mode='score': 数值升=更难(红); mode='rank': 数值升=排名靠后=更易(绿)
+function trend(stats, index, key, mode) {
+  if (index + 1 >= stats.length) return null
+  const cur = stats[index][key]
+  const prev = stats[index + 1][key]
+  if (cur == null || prev == null) return null
+  let delta = cur - prev
+  if (mode === 'score') delta = Math.round(delta * 10) / 10
+  else delta = Math.round(delta)
+  if (delta === 0) return { arrow: '–', color: '#909399', text: '持平' }
+  const up = delta > 0
+  const harder = mode === 'score' ? up : !up
+  return {
+    arrow: up ? '↑' : '↓',
+    color: harder ? '#f56c6c' : '#67c23a',
+    text: Math.abs(delta).toString(),
+  }
+}
 </script>
 
 <template>
@@ -157,9 +178,42 @@ function fmt(v) {
           <el-table :data="s.stats" size="small" border>
             <el-table-column prop="year" label="年份" width="70" align="center" />
             <el-table-column prop="plan" label="计划" align="center" />
-            <el-table-column prop="min_score" label="最低分" align="center" />
-            <el-table-column v-if="s.scope === 'city6'" prop="rank_city6" label="市区位次" align="center" />
-            <el-table-column prop="rank_whole" label="全市位次" align="center" />
+            <el-table-column label="最低分" align="center" width="110">
+              <template #default="{ row, $index }">
+                <div class="cell-trend">
+                  <span>{{ row.min_score ?? '—' }}</span>
+                  <span
+                    v-if="trend(s.stats, $index, 'min_score', 'score')"
+                    class="trend"
+                    :style="{ color: trend(s.stats, $index, 'min_score', 'score').color }"
+                  >{{ trend(s.stats, $index, 'min_score', 'score').arrow }}{{ trend(s.stats, $index, 'min_score', 'score').text }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="s.scope === 'city6'" label="市区位次" align="center" width="120">
+              <template #default="{ row, $index }">
+                <div class="cell-trend">
+                  <span>{{ row.rank_city6 != null ? row.rank_city6.toLocaleString() : '—' }}</span>
+                  <span
+                    v-if="trend(s.stats, $index, 'rank_city6', 'rank')"
+                    class="trend"
+                    :style="{ color: trend(s.stats, $index, 'rank_city6', 'rank').color }"
+                  >{{ trend(s.stats, $index, 'rank_city6', 'rank').arrow }}{{ trend(s.stats, $index, 'rank_city6', 'rank').text }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="全市位次" align="center" width="120">
+              <template #default="{ row, $index }">
+                <div class="cell-trend">
+                  <span>{{ row.rank_whole != null ? row.rank_whole.toLocaleString() : '—' }}</span>
+                  <span
+                    v-if="trend(s.stats, $index, 'rank_whole', 'rank')"
+                    class="trend"
+                    :style="{ color: trend(s.stats, $index, 'rank_whole', 'rank').color }"
+                  >{{ trend(s.stats, $index, 'rank_whole', 'rank').arrow }}{{ trend(s.stats, $index, 'rank_whole', 'rank').text }}</span>
+                </div>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
       </div>
@@ -303,6 +357,17 @@ function fmt(v) {
 
 /* 录取表 */
 .stats-section { margin-top: 4px; }
+.cell-trend {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: center;
+}
+.trend {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
 
 @media (max-width: 600px) {
   .info-grid { grid-template-columns: repeat(2, 1fr); }
