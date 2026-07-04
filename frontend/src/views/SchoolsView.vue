@@ -68,6 +68,33 @@ function cmpNum(a, b, key) {
   return av - bv
 }
 
+// 所在区彩色 tag: 市内六区固定配色, 其余按名称哈希取色
+const DISTRICT_PALETTE = [
+  { bg: '#fef3c7', text: '#b45309' }, // 琥珀
+  { bg: '#dcfce7', text: '#15803d' }, // 绿
+  { bg: '#dbeafe', text: '#1d4ed8' }, // 蓝
+  { bg: '#fbcfe8', text: '#be185d' }, // 粉
+  { bg: '#e0e7ff', text: '#4338ca' }, // 紫
+  { bg: '#cffafe', text: '#0e7490' }, // 青
+  { bg: '#fed7aa', text: '#9a3412' }, // 橙
+  { bg: '#f1f5f9', text: '#475569' }, // 灰
+]
+const DISTRICT_FIXED = {
+  和平: { bg: '#fee2e2', text: '#b91c1c' },
+  河东: { bg: '#dbeafe', text: '#1d4ed8' },
+  河西: { bg: '#dcfce7', text: '#15803d' },
+  南开: { bg: '#fbcfe8', text: '#be185d' },
+  河北: { bg: '#fed7aa', text: '#9a3412' },
+  红桥: { bg: '#e0e7ff', text: '#4338ca' },
+}
+function districtStyle(d) {
+  if (!d) return null
+  if (DISTRICT_FIXED[d]) return DISTRICT_FIXED[d]
+  let h = 0
+  for (let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0
+  return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length]
+}
+
 const sortedList = computed(() => {
   const arr = [...list.value]
   if (sortMode.value === 'score') {
@@ -154,7 +181,19 @@ const sortedList = computed(() => {
       </el-table-column>
 
       <!-- 所在区 -->
-      <el-table-column prop="location_district" label="所在区" width="90" align="center" />
+      <el-table-column label="所在区" width="90" align="center">
+        <template #default="{ row }">
+          <span
+            v-if="row.location_district"
+            class="district-tag"
+            :style="{
+              background: districtStyle(row.location_district).bg,
+              color: districtStyle(row.location_district).text,
+            }"
+          >{{ row.location_district }}</span>
+          <span v-else class="empty-val">—</span>
+        </template>
+      </el-table-column>
 
       <!-- 25年最低分 -->
       <el-table-column prop="latest_min_score" label="25年最低分" width="100" align="center">
@@ -229,6 +268,15 @@ const sortedList = computed(() => {
 .score-val { font-weight: 600; color: var(--c-text); }
 .rank-val { color: var(--c-text-2); }
 .empty-val { color: #c0c4cc; }
+
+.district-tag {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 10px;
+  line-height: 1.6;
+}
 
 @media (max-width: 768px) {
   .schools-page { padding: 20px 12px 48px; }
