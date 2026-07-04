@@ -63,11 +63,19 @@ def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
     return result
 
 
+@router.get("/districts")
+def list_districts(db: Session = Depends(get_db)):
+    """所有学校出现过的所在区(去重升序)，供筛选下拉。"""
+    rows = db.query(distinct(School.location_district)).order_by(School.location_district).all()
+    return [r[0] for r in rows if r[0]]
+
+
 @router.get("/schools")
 def list_schools(
     q: str | None = Query(None, description="名称/代码模糊搜索"),
     scope: str | None = Query(None, description="city6/whole/suburb"),
     type: str | None = Query(None, description="公办/民办"),
+    district: str | None = Query(None, description="所在区精确匹配"),
     db: Session = Depends(get_db),
 ):
     """学校列表，含最新一年录取数据摘要，供公开浏览页使用。"""
@@ -79,6 +87,8 @@ def list_schools(
         qs = qs.filter(School.scope == scope)
     if type:
         qs = qs.filter(School.type == type)
+    if district:
+        qs = qs.filter(School.location_district == district)
     schools = qs.order_by(School.code).all()
 
     # 最新一年的 min_score / rank_city6 / rank_whole（子查询）

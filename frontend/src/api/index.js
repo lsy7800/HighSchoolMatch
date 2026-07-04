@@ -23,6 +23,7 @@ api.interceptors.response.use(
 // ---- public ----
 export const getYears = () => api.get('/years').then((r) => r.data)
 export const recommend = (payload) => api.post('/recommend', payload).then((r) => r.data)
+export const listDistricts = () => api.get('/districts').then((r) => r.data)
 export const listSchools = (params) => api.get('/schools', { params }).then((r) => r.data)
 export const getSchool = (code) => api.get(`/schools/${code}`).then((r) => r.data)
 export const getScoreRank = (year) =>

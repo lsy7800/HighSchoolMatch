@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { listSchools } from '../api'
+import { ref, computed, onMounted } from 'vue'
+import { listSchools, listDistricts } from '../api'
 import SchoolSheet from '../components/SchoolSheet.vue'
 
 const scopeOpts = [
@@ -16,8 +16,13 @@ const scopeTagType = { city6: 'primary', whole: 'success', suburb: 'warning' }
 const q = ref('')
 const scope = ref('')
 const type = ref('')
+const district = ref('')
+const districtOpts = ref([])
 const list = ref([])
 const loading = ref(false)
+
+// 排序模式: 'code' = 按学校编号升序, 'score' = 按录取分数降序
+const sortMode = ref('code')
 
 const detailCode = ref('')
 const detailVisible = ref(false)
@@ -34,31 +39,44 @@ async function load() {
       q: q.value || undefined,
       scope: scope.value || undefined,
       type: type.value || undefined,
+      district: district.value || undefined,
     })
   } finally {
     loading.value = false
   }
 }
-onMounted(load)
+onMounted(async () => {
+  districtOpts.value = await listDistricts()
+  await load()
+})
 
 function onClear() {
   q.value = ''
   scope.value = ''
   type.value = ''
+  district.value = ''
   load()
 }
 
-// 数值列排序: 空值排到末尾(升序时; 降序由 el-table 反转, 极少数无数据学校会靠前)
-function numSort(key) {
-  return (a, b) => {
-    const av = a[key]
-    const bv = b[key]
-    if (av == null && bv == null) return 0
-    if (av == null) return 1
-    if (bv == null) return -1
-    return av - bv
-  }
+// 客户端排序: 数值空值排末尾
+function cmpNum(a, b, key) {
+  const av = a[key]
+  const bv = b[key]
+  if (av == null && bv == null) return 0
+  if (av == null) return 1
+  if (bv == null) return -1
+  return av - bv
 }
+
+const sortedList = computed(() => {
+  const arr = [...list.value]
+  if (sortMode.value === 'score') {
+    arr.sort((a, b) => cmpNum(b, a, 'latest_min_score') || cmpNum(a, b, 'code'))
+  } else {
+    arr.sort((a, b) => (a.code > b.code ? 1 : a.code < b.code ? -1 : 0))
+  }
+  return arr
+})
 </script>
 
 <template>
@@ -83,47 +101,63 @@ function numSort(key) {
         <el-select v-model="scope" placeholder="招生口径" clearable style="width:130px" @change="load">
           <el-option v-for="s in scopeOpts" :key="s.v" :label="s.label" :value="s.v" />
         </el-select>
+        <el-select v-model="district" placeholder="所在区" clearable filterable style="width:130px" @change="load">
+          <el-option v-for="d in districtOpts" :key="d" :label="d" :value="d" />
+        </el-select>
         <el-select v-model="type" placeholder="性质" clearable style="width:110px" @change="load">
           <el-option v-for="t in typeOpts" :key="t" :label="t" :value="t" />
         </el-select>
         <el-button type="primary" @click="load">搜索</el-button>
         <el-button @click="onClear">重置</el-button>
-        <span class="muted">共 {{ list.length }} 所</span>
+        <span class="muted">共 {{ sortedList.length }} 所</span>
       </div>
     </el-card>
 
+    <div class="sort-bar">
+      <span class="sort-label">排序：</span>
+      <el-button
+        :type="sortMode === 'code' ? 'primary' : 'default'"
+        size="small"
+        @click="sortMode = 'code'"
+      >按照学校编号排序</el-button>
+      <el-button
+        :type="sortMode === 'score' ? 'primary' : 'default'"
+        size="small"
+        @click="sortMode = 'score'"
+      >按照录取分数排序</el-button>
+    </div>
+
     <el-table
-      :data="list"
+      :data="sortedList"
       v-loading="loading"
       border
       stripe
       style="width:100%"
-      :default-sort="{ prop: 'latest_min_score', order: 'descending' }"
       :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600', fontSize: '0.85rem' }"
       :cell-style="{ fontSize: '0.875rem' }"
     >
       <!-- 学校名称 -->
-      <el-table-column prop="name" label="学校名称" min-width="160" sortable>
+      <el-table-column prop="name" label="学校名称" min-width="160">
         <template #default="{ row }">
           <span class="school-link" @click="openDetail(row.code)">{{ row.name }}</span>
         </template>
       </el-table-column>
 
       <!-- 类型 -->
-      <el-table-column prop="type" label="类型" width="70" align="center" sortable />
+      <el-table-column prop="type" label="类型" width="70" align="center" />
 
       <!-- 招生范围 -->
-      <el-table-column label="招生范围" width="100" align="center" sortable :sort-method="(a, b) => (a.scope > b.scope ? 1 : a.scope < b.scope ? -1 : 0)">
+      <el-table-column label="招生范围" width="100" align="center">
         <template #default="{ row }">
           <el-tag :type="scopeTagType[row.scope]" size="small">{{ scopeLabel[row.scope] }}</el-tag>
         </template>
       </el-table-column>
 
       <!-- 所在区 -->
-      <el-table-column prop="location_district" label="所在区" width="90" align="center" sortable />
+      <el-table-column prop="location_district" label="所在区" width="90" align="center" />
 
       <!-- 25年最低分 -->
-      <el-table-column prop="latest_min_score" label="25年最低分" width="100" align="center" sortable :sort-method="numSort('latest_min_score')">
+      <el-table-column prop="latest_min_score" label="25年最低分" width="100" align="center">
         <template #default="{ row }">
           <span v-if="row.latest_min_score" class="score-val">{{ row.latest_min_score }}</span>
           <span v-else class="empty-val">—</span>
@@ -131,7 +165,7 @@ function numSort(key) {
       </el-table-column>
 
       <!-- 市区位次（仅六区线有意义） -->
-      <el-table-column prop="latest_rank_city6" label="市区位次" width="90" align="center" sortable :sort-method="numSort('latest_rank_city6')">
+      <el-table-column prop="latest_rank_city6" label="市区位次" width="90" align="center">
         <template #default="{ row }">
           <span v-if="row.latest_rank_city6" class="rank-val">{{ row.latest_rank_city6.toLocaleString() }}</span>
           <span v-else class="empty-val">—</span>
@@ -139,7 +173,7 @@ function numSort(key) {
       </el-table-column>
 
       <!-- 全市位次 -->
-      <el-table-column prop="latest_rank_whole" label="全市位次" width="90" align="center" sortable :sort-method="numSort('latest_rank_whole')">
+      <el-table-column prop="latest_rank_whole" label="全市位次" width="90" align="center">
         <template #default="{ row }">
           <span v-if="row.latest_rank_whole" class="rank-val">{{ row.latest_rank_whole.toLocaleString() }}</span>
           <span v-else class="empty-val">—</span>
@@ -147,7 +181,7 @@ function numSort(key) {
       </el-table-column>
     </el-table>
 
-    <el-empty v-if="!loading && list.length === 0" description="没有匹配的学校" style="padding:60px 0" />
+    <el-empty v-if="!loading && sortedList.length === 0" description="没有匹配的学校" style="padding:60px 0" />
   </div>
 
   <SchoolSheet :code="detailCode" v-model="detailVisible" />
@@ -169,9 +203,21 @@ function numSort(key) {
 }
 .page-desc { color: var(--c-text-2); font-size: 0.92rem; margin: 0; }
 
-.search-card { margin-bottom: 20px; }
+.search-card { margin-bottom: 16px; }
 .search-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .muted { color: var(--c-text-2); font-size: 0.88rem; }
+
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 4px;
+}
+.sort-label {
+  font-size: 0.85rem;
+  color: var(--c-text-2);
+}
 
 .school-link {
   color: var(--el-color-primary);
