@@ -47,6 +47,18 @@ function onClear() {
   type.value = ''
   load()
 }
+
+// 数值列排序: 空值排到末尾(升序时; 降序由 el-table 反转, 极少数无数据学校会靠前)
+function numSort(key) {
+  return (a, b) => {
+    const av = a[key]
+    const bv = b[key]
+    if (av == null && bv == null) return 0
+    if (av == null) return 1
+    if (bv == null) return -1
+    return av - bv
+  }
+}
 </script>
 
 <template>
@@ -86,31 +98,32 @@ function onClear() {
       border
       stripe
       style="width:100%"
+      :default-sort="{ prop: 'latest_min_score', order: 'descending' }"
       :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600', fontSize: '0.85rem' }"
       :cell-style="{ fontSize: '0.875rem' }"
     >
       <!-- 学校名称 -->
-      <el-table-column label="学校名称" min-width="160">
+      <el-table-column prop="name" label="学校名称" min-width="160" sortable>
         <template #default="{ row }">
           <span class="school-link" @click="openDetail(row.code)">{{ row.name }}</span>
         </template>
       </el-table-column>
 
       <!-- 类型 -->
-      <el-table-column prop="type" label="类型" width="70" align="center" />
+      <el-table-column prop="type" label="类型" width="70" align="center" sortable />
 
       <!-- 招生范围 -->
-      <el-table-column label="招生范围" width="100" align="center">
+      <el-table-column label="招生范围" width="100" align="center" sortable :sort-method="(a, b) => (a.scope > b.scope ? 1 : a.scope < b.scope ? -1 : 0)">
         <template #default="{ row }">
           <el-tag :type="scopeTagType[row.scope]" size="small">{{ scopeLabel[row.scope] }}</el-tag>
         </template>
       </el-table-column>
 
       <!-- 所在区 -->
-      <el-table-column prop="location_district" label="所在区" width="90" align="center" />
+      <el-table-column prop="location_district" label="所在区" width="90" align="center" sortable />
 
       <!-- 25年最低分 -->
-      <el-table-column label="25年最低分" width="100" align="center">
+      <el-table-column prop="latest_min_score" label="25年最低分" width="100" align="center" sortable :sort-method="numSort('latest_min_score')">
         <template #default="{ row }">
           <span v-if="row.latest_min_score" class="score-val">{{ row.latest_min_score }}</span>
           <span v-else class="empty-val">—</span>
@@ -118,7 +131,7 @@ function onClear() {
       </el-table-column>
 
       <!-- 市区位次（仅六区线有意义） -->
-      <el-table-column label="市区位次" width="90" align="center">
+      <el-table-column prop="latest_rank_city6" label="市区位次" width="90" align="center" sortable :sort-method="numSort('latest_rank_city6')">
         <template #default="{ row }">
           <span v-if="row.latest_rank_city6" class="rank-val">{{ row.latest_rank_city6.toLocaleString() }}</span>
           <span v-else class="empty-val">—</span>
@@ -126,7 +139,7 @@ function onClear() {
       </el-table-column>
 
       <!-- 全市位次 -->
-      <el-table-column label="全市位次" width="90" align="center">
+      <el-table-column prop="latest_rank_whole" label="全市位次" width="90" align="center" sortable :sort-method="numSort('latest_rank_whole')">
         <template #default="{ row }">
           <span v-if="row.latest_rank_whole" class="rank-val">{{ row.latest_rank_whole.toLocaleString() }}</span>
           <span v-else class="empty-val">—</span>
