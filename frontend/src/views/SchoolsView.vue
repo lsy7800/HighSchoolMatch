@@ -95,6 +95,19 @@ function districtStyle(d) {
   return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length]
 }
 
+// 类型彩色 tag: 公办蓝 / 民办橙 / 其他按哈希
+const TYPE_FIXED = {
+  公办: { bg: '#dbeafe', text: '#1d4ed8' },
+  民办: { bg: '#fed7aa', text: '#9a3412' },
+}
+function typeStyle(t) {
+  if (!t) return null
+  if (TYPE_FIXED[t]) return TYPE_FIXED[t]
+  let h = 0
+  for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0
+  return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length]
+}
+
 const sortedList = computed(() => {
   const arr = [...list.value]
   if (sortMode.value === 'score') {
@@ -154,15 +167,16 @@ const sortedList = computed(() => {
       >按照录取分数排序</el-button>
     </div>
 
-    <el-table
-      :data="sortedList"
-      v-loading="loading"
-      border
-      stripe
-      style="width:100%"
-      :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600', fontSize: '0.85rem' }"
-      :cell-style="{ fontSize: '0.875rem' }"
-    >
+    <el-card shadow="never">
+      <el-table
+        :data="sortedList"
+        v-loading="loading"
+        border
+        stripe
+        style="width:100%"
+        :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600', fontSize: '0.85rem' }"
+        :cell-style="{ fontSize: '0.875rem' }"
+      >
       <!-- 学校名称 -->
       <el-table-column prop="name" label="学校名称" min-width="160">
         <template #default="{ row }">
@@ -171,7 +185,16 @@ const sortedList = computed(() => {
       </el-table-column>
 
       <!-- 类型 -->
-      <el-table-column prop="type" label="类型" width="70" align="center" />
+      <el-table-column label="类型" width="70" align="center">
+        <template #default="{ row }">
+          <span
+            v-if="row.type"
+            class="type-tag"
+            :style="{ background: typeStyle(row.type).bg, color: typeStyle(row.type).text }"
+          >{{ row.type }}</span>
+          <span v-else class="empty-val">—</span>
+        </template>
+      </el-table-column>
 
       <!-- 招生范围 -->
       <el-table-column label="招生范围" width="100" align="center">
@@ -218,7 +241,8 @@ const sortedList = computed(() => {
           <span v-else class="empty-val">—</span>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
+    </el-card>
 
     <el-empty v-if="!loading && sortedList.length === 0" description="没有匹配的学校" style="padding:60px 0" />
   </div>
@@ -270,6 +294,15 @@ const sortedList = computed(() => {
 .empty-val { color: #c0c4cc; }
 
 .district-tag {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 10px;
+  line-height: 1.6;
+}
+
+.type-tag {
   display: inline-block;
   font-size: 0.74rem;
   font-weight: 600;

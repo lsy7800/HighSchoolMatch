@@ -79,22 +79,24 @@ function scrollToScore() {
 
       <p class="muted" v-if="rows.length">共 {{ rows.length }} 个分数档，显示 780 → 500 分</p>
 
-      <el-table
-        :data="filtered"
-        v-loading="loading"
-        border
-        stripe
-        size="small"
-        :row-class-name="({row}) => rowClass(row)"
-        :highlight-current-row="false"
-        max-height="70vh"
-      >
-        <el-table-column prop="score" label="分数" width="80" sortable align="center" />
-        <el-table-column prop="cum_whole" label="全市累计（位次）" align="right" />
-        <el-table-column prop="cum_city6" label="市内六区累计（位次）" align="right" />
-        <el-table-column prop="band_whole" label="全市该分人数" align="right" />
-        <el-table-column prop="band_city6" label="市内六区该分人数" align="right" />
-      </el-table>
+      <el-card shadow="never">
+        <el-table
+          :data="filtered"
+          v-loading="loading"
+          border
+          stripe
+          size="small"
+          :row-class-name="({row}) => rowClass(row)"
+          :highlight-current-row="false"
+          max-height="70vh"
+        >
+          <el-table-column prop="score" label="分数" width="80" sortable align="center" />
+          <el-table-column prop="cum_whole" label="全市累计（位次）" align="center" />
+          <el-table-column prop="cum_city6" label="市内六区累计（位次）" align="center" />
+          <el-table-column prop="band_whole" label="全市该分人数" align="center" />
+          <el-table-column prop="band_city6" label="市内六区该分人数" align="center" />
+        </el-table>
+      </el-card>
     </div>
   </div>
 </template>
