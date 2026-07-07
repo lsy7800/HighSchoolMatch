@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import distinct, func
+from sqlalchemy import distinct
 from sqlalchemy.orm import Session
 
 from .. import chat, matching
@@ -78,7 +78,12 @@ def list_schools(
     district: str | None = Query(None, description="所在区精确匹配"),
     db: Session = Depends(get_db),
 ):
-    """学校列表，含最新一年录取数据摘要，供公开浏览页使用。"""
+    """学校列表，含最新招生人数 + 最新有分数年份的录取摘要，供公开浏览页使用。
+
+    2026 年仅有招生人数, 故各指标独立取"最新有值"年份:
+    - 招生人数: 取最新两年有 plan 的行(2026 vs 2025), 供增减箭头
+    - 分数/位次: 取最新有 min_score 的行(2025), 2026 无分数不影响展示
+    """
     qs = db.query(School)
     if q:
         like = f"%{q}%"
@@ -90,27 +95,26 @@ def list_schools(
     if district:
         qs = qs.filter(School.location_district == district)
     schools = qs.order_by(School.code).all()
+    school_ids = [s.id for s in schools]
 
-    # 最新一年的 min_score / rank_city6 / rank_whole（子查询）
-    latest_year_sub = (
-        db.query(SchoolStat.school_id, func.max(SchoolStat.year).label("max_year"))
-        .group_by(SchoolStat.school_id)
-        .subquery()
-    )
+    # 取这些学校的全部 stat, 按 school 分组, 年份降序
     stat_rows = (
         db.query(SchoolStat)
-        .join(
-            latest_year_sub,
-            (SchoolStat.school_id == latest_year_sub.c.school_id)
-            & (SchoolStat.year == latest_year_sub.c.max_year),
-        )
+        .filter(SchoolStat.school_id.in_(school_ids))
+        .order_by(SchoolStat.school_id, SchoolStat.year.desc())
         .all()
-    )
-    stat_map = {st.school_id: st for st in stat_rows}
+    ) if school_ids else []
+    by_school: dict[int, list[SchoolStat]] = {}
+    for st in stat_rows:
+        by_school.setdefault(st.school_id, []).append(st)
 
     result = []
     for s in schools:
-        st = stat_map.get(s.id)
+        rows = by_school.get(s.id, [])
+        score_row = next((r for r in rows if r.min_score is not None), None)
+        plan_rows = [r for r in rows if r.plan is not None]
+        latest_plan = plan_rows[0] if plan_rows else None
+        prev_plan = plan_rows[1] if len(plan_rows) > 1 else None
         result.append(
             {
                 "code": s.code,
@@ -122,10 +126,13 @@ def list_schools(
                 "canteen": s.canteen,
                 "class_types": s.class_types,
                 "intro": (s.intro or "")[:80] + ("…" if s.intro and len(s.intro) > 80 else ""),
-                "latest_year": st.year if st else None,
-                "latest_min_score": st.min_score if st else None,
-                "latest_rank_city6": st.rank_city6 if st else None,
-                "latest_rank_whole": st.rank_whole if st else None,
+                "latest_plan_year": latest_plan.year if latest_plan else None,
+                "latest_plan": latest_plan.plan if latest_plan else None,
+                "prev_plan": prev_plan.plan if prev_plan else None,
+                "latest_min_score_year": score_row.year if score_row else None,
+                "latest_min_score": score_row.min_score if score_row else None,
+                "latest_rank_city6": score_row.rank_city6 if score_row else None,
+                "latest_rank_whole": score_row.rank_whole if score_row else None,
             }
         )
     return result

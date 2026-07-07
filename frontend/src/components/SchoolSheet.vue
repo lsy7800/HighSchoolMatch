@@ -80,7 +80,8 @@ function fmt(v) {
 
 // 与上一年(更早的年份)对比的增减趋势。
 // stats 按年份降序排列, 故上一行 = 索引+1。
-// mode='score': 数值升=更难(红); mode='rank': 数值升=排名靠后=更易(绿)
+// mode='score': 数值升=更难(红); mode='rank': 数值升=排名靠后=更易(绿);
+// mode='plan': 数值升=扩招=更易(绿)
 function trend(stats, index, key, mode) {
   if (index + 1 >= stats.length) return null
   const cur = stats[index][key]
@@ -172,12 +173,34 @@ function trend(stats, index, key, mode) {
           </div>
         </div>
 
+        <!-- 各年招生人数 -->
+        <div class="plan-section">
+          <div class="section-label">各年招生人数</div>
+          <el-table :data="s.stats" size="small" border>
+            <el-table-column prop="year" label="年份" width="80" align="center" />
+            <el-table-column label="招生人数" align="center">
+              <template #default="{ row }">
+                <span>{{ row.plan != null ? row.plan : '—' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="较上年" align="center" width="110">
+              <template #default="{ row, $index }">
+                <span
+                  v-if="trend(s.stats, $index, 'plan', 'plan')"
+                  class="trend"
+                  :style="{ color: trend(s.stats, $index, 'plan', 'plan').color }"
+                >{{ trend(s.stats, $index, 'plan', 'plan').arrow }}{{ trend(s.stats, $index, 'plan', 'plan').text }}</span>
+                <span v-else class="empty-val">—</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
         <!-- 历年录取 -->
         <div class="stats-section">
           <div class="section-label">历年录取</div>
           <el-table :data="s.stats" size="small" border>
             <el-table-column prop="year" label="年份" width="70" align="center" />
-            <el-table-column prop="plan" label="计划" align="center" />
             <el-table-column label="最低分" align="center" width="110">
               <template #default="{ row, $index }">
                 <div class="cell-trend">
@@ -357,6 +380,7 @@ function trend(stats, index, key, mode) {
 
 /* 录取表 */
 .stats-section { margin-top: 4px; }
+.plan-section { margin-bottom: 18px; }
 .cell-trend {
   display: inline-flex;
   align-items: baseline;

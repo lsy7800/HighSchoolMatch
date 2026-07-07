@@ -117,6 +117,21 @@ const sortedList = computed(() => {
   }
   return arr
 })
+
+// 招生人数同比: 扩招(↑绿, 对考生更易) / 缩招(↓红, 更难)
+function planTrend(row) {
+  const cur = row.latest_plan
+  const prev = row.prev_plan
+  if (cur == null || prev == null) return null
+  const delta = cur - prev
+  if (delta === 0) return { arrow: '–', color: '#909399', text: '持平' }
+  const up = delta > 0
+  return {
+    arrow: up ? '↑' : '↓',
+    color: up ? '#67c23a' : '#f56c6c',
+    text: Math.abs(delta).toString(),
+  }
+}
 </script>
 
 <template>
@@ -241,6 +256,22 @@ const sortedList = computed(() => {
           <span v-else class="empty-val">—</span>
         </template>
       </el-table-column>
+
+      <!-- 招生人数(最新年) + 较上年增减 -->
+      <el-table-column label="招生人数" width="120" align="center">
+        <template #default="{ row }">
+          <div class="cell-trend">
+            <span v-if="row.latest_plan != null" class="plan-val">{{ row.latest_plan }}</span>
+            <span v-else class="empty-val">—</span>
+            <span
+              v-if="planTrend(row)"
+              class="trend"
+              :style="{ color: planTrend(row).color }"
+            >{{ planTrend(row).arrow }}{{ planTrend(row).text }}</span>
+          </div>
+          <div v-if="row.latest_plan_year" class="plan-year">{{ row.latest_plan_year }}年</div>
+        </template>
+      </el-table-column>
       </el-table>
     </el-card>
 
@@ -292,6 +323,20 @@ const sortedList = computed(() => {
 .score-val { font-weight: 600; color: var(--c-text); }
 .rank-val { color: var(--c-text-2); }
 .empty-val { color: #c0c4cc; }
+
+.cell-trend {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: center;
+}
+.trend {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.plan-val { font-weight: 600; color: var(--c-text); }
+.plan-year { font-size: 0.68rem; color: var(--c-text-2); margin-top: 2px; }
 
 .district-tag {
   display: inline-block;
