@@ -114,15 +114,20 @@ def _tool_score_to_rank(db: Session, args: dict) -> dict:
 
 def _tool_get_school_detail(db: Session, args: dict) -> dict:
     code = str(args.get("code") or "").strip()
-    if not code:
-        return {"error": "缺少 code 参数"}
-    schools = db.query(School).filter(School.code == code).all()
+    name = str(args.get("name") or "").strip()
+    if not code and not name:
+        return {"error": "缺少 code 或 name 参数"}
+    if code:
+        schools = db.query(School).filter(School.code == code).all()
+    else:
+        # 名称模糊匹配(用户说"第二十中学"时 LLM 不知道 code, 用名称查)
+        schools = db.query(School).filter(School.name.like(f"%{name}%")).all()
     if not schools:
-        return {"error": f"未找到学校代码 {code}"}
+        return {"error": f"未找到学校 code={code} name={name}"}
     # 市内六区考生不可报郊区, 过滤掉
     schools = [s for s in schools if s.scope != "suburb"]
     if not schools:
-        return {"error": f"学校 {code} 仅面向郊区招生，市内六区考生不可填报"}
+        return {"error": f"学校 {code or name} 仅面向郊区招生，市内六区考生不可填报"}
     out = []
     for s in schools:
         stats = sorted(s.stats, key=lambda x: x.year, reverse=True)
@@ -202,11 +207,14 @@ TOOL_SPECS = [
         "type": "function",
         "function": {
             "name": "get_school_detail",
-            "description": "按学校代码查单校详情: 班型/住宿/学费/地址/简介/历年录取(计划/最低分/位次)。市内六区不可报的郊区线已过滤。",
+            "description": "查单校详情: 班型/住宿/学费/简介/历年录取(计划/最低分/位次)。可传 code(如 10101) 或 name(如 '第二十中学'); 用户只说校名不知道代码时用 name 模糊查, 市内六区不可报的郊区线已过滤。",
             "parameters": {
                 "type": "object",
-                "properties": {"code": {"type": "string", "description": "学校代码, 如 10101"}},
-                "required": ["code"],
+                "properties": {
+                    "code": {"type": "string", "description": "学校代码, 如 10101。优先用 code"},
+                    "name": {"type": "string", "description": "学校名称(可模糊), 如 '第二十中学'。无 code 时用名称查"},
+                },
+                "required": [],
             },
         },
     },
