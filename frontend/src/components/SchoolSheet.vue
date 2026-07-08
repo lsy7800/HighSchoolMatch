@@ -28,6 +28,9 @@ function rankPoints(s) {
 function scorePoints(s) {
   return s.stats.map((st) => ({ year: st.year, value: st.min_score }))
 }
+function planPoints(s) {
+  return s.stats.map((st) => ({ year: st.year, value: st.plan }))
+}
 
 watch(
   () => [props.code, props.modelValue],
@@ -176,24 +179,21 @@ function trend(stats, index, key, mode) {
         <!-- 各年招生人数 -->
         <div class="plan-section">
           <div class="section-label">各年招生人数</div>
-          <el-table :data="s.stats" size="small" border>
-            <el-table-column prop="year" label="年份" width="80" align="center" />
-            <el-table-column label="招生人数" align="center">
-              <template #default="{ row }">
-                <span>{{ row.plan != null ? row.plan : '—' }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="较上年" align="center" width="110">
-              <template #default="{ row, $index }">
-                <span
-                  v-if="trend(s.stats, $index, 'plan', 'plan')"
-                  class="trend"
-                  :style="{ color: trend(s.stats, $index, 'plan', 'plan').color }"
-                >{{ trend(s.stats, $index, 'plan', 'plan').arrow }}{{ trend(s.stats, $index, 'plan', 'plan').text }}</span>
-                <span v-else class="empty-val">—</span>
-              </template>
-            </el-table-column>
-          </el-table>
+          <div class="plan-row">
+            <TrendChart
+              :points="planPoints(s)"
+              color="#9333ea"
+              label="招生人数趋势"
+            />
+            <el-table :data="s.stats" size="small" border class="plan-table">
+              <el-table-column prop="year" label="年份" width="80" align="center" />
+              <el-table-column label="招生人数" align="center">
+                <template #default="{ row }">
+                  <span>{{ row.plan != null ? row.plan : '—' }}</span>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
         </div>
 
         <!-- 历年录取 -->
@@ -381,6 +381,14 @@ function trend(stats, index, key, mode) {
 /* 录取表 */
 .stats-section { margin-top: 4px; }
 .plan-section { margin-bottom: 18px; }
+.plan-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.plan-row > * { flex: 1; min-width: 220px; }
+.plan-table { align-self: stretch; }
 .cell-trend {
   display: inline-flex;
   align-items: baseline;

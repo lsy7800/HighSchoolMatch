@@ -257,19 +257,18 @@ function planTrend(row) {
         </template>
       </el-table-column>
 
-      <!-- 招生人数(最新年) + 较上年增减 -->
-      <el-table-column label="招生人数" width="120" align="center">
+      <!-- 招生人数(2026) + 较上年增减箭头 -->
+      <el-table-column label="2026年招生人数" width="130" align="center">
         <template #default="{ row }">
           <div class="cell-trend">
             <span v-if="row.latest_plan != null" class="plan-val">{{ row.latest_plan }}</span>
             <span v-else class="empty-val">—</span>
             <span
               v-if="planTrend(row)"
-              class="trend"
+              class="trend trend-arrow"
               :style="{ color: planTrend(row).color }"
-            >{{ planTrend(row).arrow }}{{ planTrend(row).text }}</span>
+            >{{ planTrend(row).arrow }}</span>
           </div>
-          <div v-if="row.latest_plan_year" class="plan-year">{{ row.latest_plan_year }}年</div>
         </template>
       </el-table-column>
       </el-table>
