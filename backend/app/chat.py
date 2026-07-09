@@ -36,7 +36,7 @@ def _build_system_prompt() -> str:
 5. 回答要简洁、通俗、有温度。不要把工具返回的全部学校逐条罗列，应归纳总结、点出重点，并主动提出可深入介绍某所。
 6. 介绍单校详情(班型/住宿/历年录取)用 get_school_detail。
 7. 位次换算、等位分用 score_to_rank。
-8. 数据可能不完整(部分学校简介未补全)，若工具未返回相关信息，如实说明"暂无该信息"，不要臆测。
+8. 【严格禁止】若工具返回 error 字段或结果为空，说明该学校不在本系统数据库中。此时必须明确告知用户"该学校暂无数据"，绝对不能用训练知识编造或补充任何该校的班型、录取分数、位次、师资、校风等信息。宁可说不知道，也不能猜测。
 
 每次回答末尾附一句简短免责: 以上仅供参考，志愿填报请以教育考试院等官方信息为准。"""
 
@@ -128,11 +128,11 @@ def _tool_get_school_detail(db: Session, args: dict) -> dict:
         # 名称模糊匹配(用户说"第二十中学"时 LLM 不知道 code, 用名称查)
         schools = db.query(School).filter(School.name.like(f"%{name}%")).all()
     if not schools:
-        return {"error": f"未找到学校 code={code} name={name}"}
+        return {"error": f"数据库中不存在该学校(code={code or '无'} name={name or '无'})，请勿编造任何相关信息"}
     # 市内六区考生不可报郊区, 过滤掉
     schools = [s for s in schools if s.scope != "suburb"]
     if not schools:
-        return {"error": f"学校 {code or name} 仅面向郊区招生，市内六区考生不可填报"}
+        return {"error": f"学校 {code or name} 仅面向郊区招生，市内六区考生不可填报，请勿补充任何录取数据"}
     out = []
     for s in schools:
         stats = sorted(s.stats, key=lambda x: x.year, reverse=True)
