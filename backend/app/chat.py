@@ -21,7 +21,12 @@ from .models import School, ScoreRank
 # 市内六区考生不可填报郊区招生, 详情/检索里都过滤郊区
 SCOPE_LABEL = {"city6": "市内六区", "whole": "全市", "suburb": "郊区"}
 
-SYSTEM_PROMPT = """你是「天津中考志愿助手」，面向天津市内六区考生和家长，帮助理解中考志愿填报。
+def _build_system_prompt() -> str:
+    from datetime import date
+    today = date.today()
+    return f"""你是「天津中考志愿助手」，面向天津市内六区考生和家长，帮助理解中考志愿填报。
+
+今天是 {today.year} 年 {today.month} 月 {today.day} 日。{today.year} 年天津中考已经结束，考生已知晓分数，现处于志愿填报阶段。
 
 核心规则:
 1. 你只能基于工具返回的数据回答学校、分数、位次、录取等事实问题。涉及具体数字时必须先调用相应工具，绝不编造分数、位次、学校名单或录取数据。
@@ -386,7 +391,7 @@ def stream_chat(message: str, history: list[dict], db: Session):
         yield _sse({"type": "error", "message": "未配置 DEEPSEEK_API_KEY，无法启用问答"})
         return
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": _build_system_prompt()}]
     for m in (history or []):
         if m.get("role") in ("user", "assistant") and m.get("content"):
             messages.append({"role": m["role"], "content": m["content"]})
