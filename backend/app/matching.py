@@ -190,20 +190,35 @@ def _iter_school_stats(db: Session, ref_year: int):
         yield s, stat, school_rank
 
 
+def latest_school_stat_year(db: Session) -> int | None:
+    """学校录取数据中有位次的最新年份(rank_city6 或 rank_whole 非空)。
+
+    用于 ref_year 默认值: 2026 一分档上线后, year=2026(分数换算),
+    但学校 2026 录取位次还没有(录取未发生), ref_year 应取 2025 等最近有录取数据的年份。
+    """
+    row = (
+        db.query(SchoolStat.year)
+        .filter((SchoolStat.rank_city6.isnot(None)) | (SchoolStat.rank_whole.isnot(None)))
+        .order_by(SchoolStat.year.desc())
+        .first()
+    )
+    return row[0] if row else None
+
+
 def recommend(
     db: Session, score: float, year: int, ref_year: int | None = None
 ) -> dict:
     """主流程: 分数 -> 位次/等位分 -> 各校冲稳保分类。
 
     year:     用于把分数换算成位次的一分档年份(今年)。
-    ref_year: 用于"等位分"和学校录取数据比对的年份(默认同 year)。
-              2026 上线后传 year=2026, ref_year=2025。
+    ref_year: 用于"等位分"和学校录取数据比对的年份。默认取学校有录取位次的
+              最新年份(通常是上一年, 因为今年录取尚未发生)。
 
     低分模式: 当分数低于一分档最低档(below_floor)时, 冲/稳/保 已无意义,
     改为返回单一 reachable 列表(所有学校按录取门槛从低到高排序,
     "能上哪所上哪所"), 并置 low_score_mode=True。
     """
-    ref_year = ref_year or year
+    ref_year = ref_year or latest_school_stat_year(db) or year
     cfg = get_config(db)
 
     rank = score_to_rank(db, score, year)
