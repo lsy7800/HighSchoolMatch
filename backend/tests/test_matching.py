@@ -1,7 +1,7 @@
-"""Tests for the matching engine + public API, against the seeded 2025 data.
+"""Tests for the matching engine + public API, against the seeded data.
 
 Run from backend/:  python -m pytest -q
-Requires the DB to be seeded first (scripts.seed_2025).
+Requires the DB to be seeded first (scripts.seed).
 """
 import pytest
 from fastapi.testclient import TestClient
@@ -134,12 +134,12 @@ def test_api_recommend(client):
 
 
 def test_api_school_detail(client):
-    r = client.get("/api/schools/10101")  # 天津一中
+    r = client.get("/api/schools/10101")  # 第一中学(天津一中)
     assert r.status_code == 200
     body = r.json()
-    assert body[0]["name"] == "★天津一中"
+    assert body[0]["name"] == "第一中学"
     s2025 = next(s for s in body[0]["stats"] if s["year"] == 2025)
-    assert s2025["rank_city6"] == 1193
+    assert s2025["rank_city6"] == 1088
 
 
 def test_api_school_not_found(client):

@@ -14,7 +14,7 @@ from app.main import app
 
 DATA = Path(__file__).resolve().parent.parent.parent / "data_source"
 SCORE_RANK_XLSX = DATA / "2025年一分档.xlsx"
-SCHOOLS_XLSX = DATA / "天津市高中数据汇总2025（分区）.xlsx"
+SCHOOLS_XLSX = DATA / "2026年天津高中信息调查表.xlsx"
 
 
 @pytest.fixture(scope="module")
@@ -58,39 +58,39 @@ def test_me(client, token):
 def test_list_and_filter_schools(client, token):
     r = client.get("/api/admin/schools", headers=auth(token))
     assert r.status_code == 200
-    assert len(r.json()) == 278
+    assert len(r.json()) == 142
 
     r2 = client.get("/api/admin/schools?scope=city6", headers=auth(token))
-    assert len(r2.json()) == 81
+    assert len(r2.json()) == 93
 
     r3 = client.get("/api/admin/schools?q=一中", headers=auth(token))
     assert any("一中" in s["name"] for s in r3.json())
 
 
 def test_update_school_then_restore(client, token):
-    # find 天津一中
-    lst = client.get("/api/admin/schools?q=天津一中", headers=auth(token)).json()
+    # find 第一中学 (code 10101)
+    lst = client.get("/api/admin/schools?q=10101", headers=auth(token)).json()
     sid = next(s["id"] for s in lst if s["code"] == "10101")
     orig = client.get(f"/api/admin/schools/{sid}", headers=auth(token)).json()
 
     r = client.put(
         f"/api/admin/schools/{sid}",
-        json={"phone": "00000000"},
+        json={"boarding": "测试值"},
         headers=auth(token),
     )
     assert r.status_code == 200
-    assert r.json()["phone"] == "00000000"
+    assert r.json()["boarding"] == "测试值"
 
     # restore
     client.put(
         f"/api/admin/schools/{sid}",
-        json={"phone": orig["phone"]},
+        json={"boarding": orig["boarding"]},
         headers=auth(token),
     )
 
 
 def test_upsert_stat(client, token):
-    lst = client.get("/api/admin/schools?q=天津一中", headers=auth(token)).json()
+    lst = client.get("/api/admin/schools?q=10101", headers=auth(token)).json()
     sid = next(s["id"] for s in lst if s["code"] == "10101")
     r = client.put(
         f"/api/admin/schools/{sid}/stat",
@@ -108,7 +108,7 @@ def test_upsert_stat(client, token):
 
 
 def test_delete_stat_missing_year(client, token):
-    lst = client.get("/api/admin/schools?q=天津一中", headers=auth(token)).json()
+    lst = client.get("/api/admin/schools?q=10101", headers=auth(token)).json()
     sid = next(s["id"] for s in lst if s["code"] == "10101")
     r = client.delete(f"/api/admin/schools/{sid}/stat/1999", headers=auth(token))
     assert r.status_code == 404
@@ -222,7 +222,7 @@ def test_import_schools_preview(client, token):
     assert r.status_code == 200
     body = r.json()
     assert body["committed"] is False
-    assert body["preview"]["total"] == 278
+    assert body["preview"]["total"] == 142
 
 
 def test_import_rejects_non_xlsx(client, token):
