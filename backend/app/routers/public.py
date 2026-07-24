@@ -111,7 +111,7 @@ def list_schools(
     result = []
     for s in schools:
         rows = by_school.get(s.id, [])
-        score_row = next((r for r in rows if r.min_score is not None), None)
+        score_row = next((r for r in rows if r.year == 2026 and r.min_score is not None), None)
         plan_rows = [r for r in rows if r.plan is not None]
         latest_plan = plan_rows[0] if plan_rows else None
         prev_plan = plan_rows[1] if len(plan_rows) > 1 else None

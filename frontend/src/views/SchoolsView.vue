@@ -233,26 +233,35 @@ function planTrend(row) {
         </template>
       </el-table-column>
 
-      <!-- 26年最低分 -->
-      <el-table-column prop="latest_min_score" label="26年最低分" width="100" align="center">
+      <!-- 最低分（仅显示 2026 年有值的，无则 —） -->
+      <el-table-column prop="latest_min_score" label="最低分" width="100" align="center">
         <template #default="{ row }">
-          <span v-if="row.latest_min_score" class="score-val">{{ row.latest_min_score }}</span>
+          <template v-if="row.latest_min_score">
+            <span class="score-val">{{ row.latest_min_score }}</span>
+            <span class="year-hint">'{{ String(row.latest_min_score_year).slice(2) }}</span>
+          </template>
           <span v-else class="empty-val">—</span>
         </template>
       </el-table-column>
 
-      <!-- 市区位次（仅六区线有意义） -->
-      <el-table-column prop="latest_rank_city6" label="26年市区位次" width="105" align="center">
+      <!-- 市区位次（仅六区线有意义，仅显示 2026 年有值的） -->
+      <el-table-column prop="latest_rank_city6" label="市区位次" width="105" align="center">
         <template #default="{ row }">
-          <span v-if="row.latest_rank_city6" class="rank-val">{{ row.latest_rank_city6.toLocaleString() }}</span>
+          <template v-if="row.latest_rank_city6">
+            <span class="rank-val">{{ row.latest_rank_city6.toLocaleString() }}</span>
+            <span class="year-hint">'{{ String(row.latest_min_score_year).slice(2) }}</span>
+          </template>
           <span v-else class="empty-val">—</span>
         </template>
       </el-table-column>
 
-      <!-- 全市位次 -->
-      <el-table-column prop="latest_rank_whole" label="26年全市位次" width="105" align="center">
+      <!-- 全市位次（仅显示 2026 年有值的） -->
+      <el-table-column prop="latest_rank_whole" label="全市位次" width="105" align="center">
         <template #default="{ row }">
-          <span v-if="row.latest_rank_whole" class="rank-val">{{ row.latest_rank_whole.toLocaleString() }}</span>
+          <template v-if="row.latest_rank_whole">
+            <span class="rank-val">{{ row.latest_rank_whole.toLocaleString() }}</span>
+            <span class="year-hint">'{{ String(row.latest_min_score_year).slice(2) }}</span>
+          </template>
           <span v-else class="empty-val">—</span>
         </template>
       </el-table-column>
@@ -322,6 +331,7 @@ function planTrend(row) {
 .score-val { font-weight: 600; color: var(--c-text); }
 .rank-val { color: var(--c-text-2); }
 .empty-val { color: #c0c4cc; }
+.year-hint { font-size: 0.72rem; color: #c0c4cc; margin-left: 2px; }
 
 .cell-trend {
   display: inline-flex;
