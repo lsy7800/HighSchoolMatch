@@ -233,8 +233,8 @@ function planTrend(row) {
         </template>
       </el-table-column>
 
-      <!-- 25年最低分 -->
-      <el-table-column prop="latest_min_score" label="25年最低分" width="100" align="center">
+      <!-- 26年最低分 -->
+      <el-table-column prop="latest_min_score" label="26年最低分" width="100" align="center">
         <template #default="{ row }">
           <span v-if="row.latest_min_score" class="score-val">{{ row.latest_min_score }}</span>
           <span v-else class="empty-val">—</span>
@@ -242,7 +242,7 @@ function planTrend(row) {
       </el-table-column>
 
       <!-- 市区位次（仅六区线有意义） -->
-      <el-table-column prop="latest_rank_city6" label="市区位次" width="90" align="center">
+      <el-table-column prop="latest_rank_city6" label="26年市区位次" width="105" align="center">
         <template #default="{ row }">
           <span v-if="row.latest_rank_city6" class="rank-val">{{ row.latest_rank_city6.toLocaleString() }}</span>
           <span v-else class="empty-val">—</span>
@@ -250,7 +250,7 @@ function planTrend(row) {
       </el-table-column>
 
       <!-- 全市位次 -->
-      <el-table-column prop="latest_rank_whole" label="全市位次" width="90" align="center">
+      <el-table-column prop="latest_rank_whole" label="26年全市位次" width="105" align="center">
         <template #default="{ row }">
           <span v-if="row.latest_rank_whole" class="rank-val">{{ row.latest_rank_whole.toLocaleString() }}</span>
           <span v-else class="empty-val">—</span>
